@@ -1,0 +1,19 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.leclowndu93150.wakes.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "wakes.refmap.json",
+  "mixins": [
+    "LilyPadFallMixin",
+    "TameableTeleportMixin",
+    "WakeSpawnerMixin"
+  ],
+  "client": [
+    "DebugHudMixin",
+    "ModListScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

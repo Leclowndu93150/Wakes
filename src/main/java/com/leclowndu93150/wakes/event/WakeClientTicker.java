@@ -1,0 +1,20 @@
+package com.leclowndu93150.wakes.event;
+
+import com.leclowndu93150.wakes.simulation.WakeHandler;
+import net.minecraft.client.Minecraft;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
+
+@EventBusSubscriber(bus =  EventBusSubscriber.Bus.GAME)
+public class WakeClientTicker {
+    @SubscribeEvent
+    public static void onClientTick(ClientTickEvent.Pre event) {
+        Minecraft client = Minecraft.getInstance();
+        if (client.level == null) {
+            WakeHandler.kill();
+        } else if (WakeHandler.getInstance().isEmpty()) {
+            WakeHandler.init(client.level);
+        }
+    }
+}
