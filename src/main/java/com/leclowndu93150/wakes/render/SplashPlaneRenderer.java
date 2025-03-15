@@ -17,6 +17,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.entity.Entity;
@@ -85,12 +86,11 @@ public class SplashPlaneRenderer implements WorldRenderEvents.AfterTranslucent {
     }
 
     private static void renderSurface(Matrix4f matrix) {
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.NEW_ENTITY);
-        // TODO IMPROVE ANIMATION (WATER TRAVELS IN AN OUTWARDS DIRECTION)
-        // AND ADD A BOUNCY FEEL TO IT (BOBBING UP AND DOWN) WAIT IT IS JUST THE BOAT THAT IS DOING THAT
-        // MAYBE ADD TO BLAZINGLY FAST BOATS?
-        // https://streamable.com/tz0gp
-        int light = LightTexture.FULL_BRIGHT;
+        //Use a shader that doesn't care about lighting
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+
+        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_TEX_COLOR);
+
         for (int s = -1; s < 2; s++) {
             if (s == 0) continue;
             for (int i = 0; i < vertices.size(); i++) {
@@ -100,14 +100,13 @@ public class SplashPlaneRenderer implements WorldRenderEvents.AfterTranslucent {
                                 (float) (s * (vertex.x * WakesConfig.splashPlaneWidth + WakesConfig.splashPlaneGap)),
                                 (float) (vertex.z * WakesConfig.splashPlaneHeight),
                                 (float) (vertex.y * WakesConfig.splashPlaneDepth))
-                        .setColor(1f, 1f, 1f, 1f)
                         .setUv((float) (vertex.x), (float) (vertex.y))
-                        .setOverlay(OverlayTexture.NO_OVERLAY)
-                        .setLight(light)
-                        .setNormal((float) normal.x, (float) normal.y, (float) normal.z);
+                        .setColor(1.0f, 1.0f, 1.0f, 1.0f);
             }
         }
 
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
         RenderSystem.disableCull();
         RenderSystem.enableDepthTest();
         BufferUploader.drawWithShader(buffer.buildOrThrow());

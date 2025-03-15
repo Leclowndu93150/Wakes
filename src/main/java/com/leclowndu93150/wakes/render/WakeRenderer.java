@@ -13,6 +13,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GameRenderer;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -75,36 +76,30 @@ public class WakeRenderer {
         if (!brick.hasPopulatedPixels) return;
         texture.loadTexture(brick.imgPtr);
 
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.NEW_ENTITY);
+        // Use position color tex shader to bypass lighting system
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+
+        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
 
         Vector3f pos = brick.pos.add(camera.getPosition().reverse()).toVector3f().add(0, WakeNode.WATER_OFFSET, 0);
-        int light = LightTexture.FULL_BRIGHT;
 
         buffer.addVertex(matrix, pos.x, pos.y, pos.z)
                 .setColor(1f, 1f, 1f, 1f)
-                .setUv(0, 0)
-                .setOverlay(OverlayTexture.NO_OVERLAY)
-                .setLight(light)
-                .setNormal(0f, 1f, 0f);
+                .setUv(0, 0);
         buffer.addVertex(matrix, pos.x, pos.y, pos.z + brick.dim)
                 .setColor(1f, 1f, 1f, 1f)
-                .setUv(0, 1)
-                .setOverlay(OverlayTexture.NO_OVERLAY)
-                .setLight(light)
-                .setNormal(0f, 1f, 0f);
+                .setUv(0, 1);
         buffer.addVertex(matrix, pos.x + brick.dim, pos.y, pos.z + brick.dim)
                 .setColor(1f, 1f, 1f, 1f)
-                .setUv(1, 1)
-                .setOverlay(OverlayTexture.NO_OVERLAY)
-                .setLight(light)
-                .setNormal(0f, 1f, 0f);
+                .setUv(1, 1);
         buffer.addVertex(matrix, pos.x + brick.dim, pos.y, pos.z)
                 .setColor(1f, 1f, 1f, 1f)
-                .setUv(1, 0)
-                .setOverlay(OverlayTexture.NO_OVERLAY)
-                .setLight(light)
-                .setNormal(0f, 1f, 0f);
+                .setUv(1, 0);
 
+        RenderSystem.disableCull();
         BufferUploader.drawWithShader(buffer.build());
+        RenderSystem.enableCull();
     }
 }
