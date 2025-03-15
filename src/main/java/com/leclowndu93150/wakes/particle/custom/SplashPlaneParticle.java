@@ -9,6 +9,7 @@ import com.leclowndu93150.wakes.simulation.WakeHandler;
 import com.leclowndu93150.wakes.utils.WakesUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -164,11 +165,12 @@ public class SplashPlaneParticle extends Particle {
         this.isRenderReady = true;
     }
 
-    public void translateMatrix(PoseStack matrices, Camera camera, float partialTick) {
-        Vec3 cameraPos = camera.getPosition();
-        float x = (float) (Mth.lerp(partialTick, this.xo, this.x) - cameraPos.x());
-        float y = (float) (Mth.lerp(partialTick, this.yo, this.y) - cameraPos.y());
-        float z = (float) (Mth.lerp(partialTick, this.zo, this.z) - cameraPos.z());
+    public void translateMatrix(WorldRenderContext context, PoseStack matrices) {
+        Vec3 cameraPos = context.camera().getPosition();
+        float tickDelta = context.tickCounter().getGameTimeDeltaPartialTick(true);
+        float x = (float) (Mth.lerp(tickDelta, this.xo, this.x) - cameraPos.x());
+        float y = (float) (Mth.lerp(tickDelta, this.yo, this.y) - cameraPos.y());
+        float z = (float) (Mth.lerp(tickDelta, this.zo, this.z) - cameraPos.z());
 
         matrices.translate(x, y, z);
     }

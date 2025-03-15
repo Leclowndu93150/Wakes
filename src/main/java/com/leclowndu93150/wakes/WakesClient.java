@@ -5,6 +5,7 @@ import com.leclowndu93150.wakes.particle.ModParticles;
 import com.leclowndu93150.wakes.render.SplashPlaneRenderer;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import eu.midnightdust.lib.config.MidnightConfig;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
@@ -30,6 +31,7 @@ public class WakesClient {
 		MidnightConfig.init(WakesClient.MOD_ID, WakesConfig.class);
 		ModParticles.register(modEventBus);
 		SplashPlaneRenderer.initSplashPlane();
+		WorldRenderEvents.AFTER_TRANSLUCENT.register(new SplashPlaneRenderer());
 		modEventBus.addListener(ModParticles::registerParticleFactories);
 	}
 

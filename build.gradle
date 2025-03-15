@@ -99,9 +99,14 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 
 dependencies {
+
+    fileTree(dir: 'libs', include: '*.jar').each { File file ->
+        implementation files(file.path)
+    }
+
     implementation "curse.maven:midnightlib-488090:6222932"
     compileOnlyApi "curse.maven:irisshaders-455508:6213632"
-    implementation(files("libs/satin-1.0.0.jar"))
+    //implementation(files("libs/satin-1.0.0.jar"))
     //implementation "curse.maven:sodium-394468:6211307"
 }
 
