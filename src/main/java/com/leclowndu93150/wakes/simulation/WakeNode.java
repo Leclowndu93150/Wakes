@@ -47,7 +47,7 @@ public class WakeNode {
         this.x = xz[0];
         this.y = y;
         this.z = xz[1];
-        this.floodLevel = WakesConfig.floodFillDistance;
+        this.floodLevel = WakesConfig.DEBUG.floodFillDistance.get();
     }
 
     public SimulationNode getSimulationNode(WakeNode neighboringNode) {
@@ -76,7 +76,7 @@ public class WakeNode {
     }
 
     public void floodFill(WakeHandler wakeHandler) {
-        if (floodLevel > 0 && this.age > WakesConfig.floodFillTickDelay) {
+        if (floodLevel > 0 && this.age > WakesConfig.DEBUG.floodFillTickDelay.get()) {
             if (this.NORTH == null) {
                 wakeHandler.insert(new WakeNode(this.x, this.y, this.z - 1, floodLevel - 1));
             } else {
@@ -146,7 +146,7 @@ public class WakeNode {
 
     public void revive(WakeNode node) {
         this.age = 0;
-        this.floodLevel = WakesConfig.floodFillDistance;
+        this.floodLevel = WakesConfig.DEBUG.floodFillDistance.get();
         this.simulationNode.initialValues = node.simulationNode.initialValues;
     }
 
@@ -194,7 +194,7 @@ public class WakeNode {
                     }
                 }
             }
-            return pixelsToNodes(pixelsAffected, y, WakesConfig.splashStrength, Math.abs(entity.getDeltaMovement().y));
+            return pixelsToNodes(pixelsAffected, y, WakesConfig.GENERAL.splashStrength.get(), Math.abs(entity.getDeltaMovement().y));
         }
 
         public static Set<WakeNode> rowingNodes(Boat boat, int y) {
@@ -211,7 +211,7 @@ public class WakeNode {
                         Vec3 dir = Vec3.directionFromRotation(0, boat.getYRot()).scale(velocity);
                         Vec3 from = paddlePos;
                         Vec3 to = paddlePos.add(dir.scale(2));
-                        nodesAffected.addAll(nodeTrail(from.x, from.z, to.x, to.z, y, WakesConfig.paddleStrength, velocity));
+                        nodesAffected.addAll(nodeTrail(from.x, from.z, to.x, to.z, y, WakesConfig.GENERAL.paddleStrength.get(), velocity));
                     }
                 }
             }

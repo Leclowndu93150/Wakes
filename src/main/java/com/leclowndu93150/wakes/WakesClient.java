@@ -4,17 +4,14 @@ import com.leclowndu93150.wakes.config.WakesConfig;
 import com.leclowndu93150.wakes.particle.ModParticles;
 import com.leclowndu93150.wakes.render.SplashPlaneRenderer;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import eu.midnightdust.lib.config.MidnightConfig;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.PreparableReloadListener;
-import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceProvider;
-import net.minecraft.util.profiling.ProfilerFiller;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import org.slf4j.Logger;
@@ -22,7 +19,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 
 @Mod(WakesClient.MOD_ID)
 public class WakesClient {
@@ -33,11 +29,12 @@ public class WakesClient {
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 	public static boolean areShadersEnabled = false;
 
-	public WakesClient(IEventBus modEventBus) {
-		MidnightConfig.init(WakesClient.MOD_ID, WakesConfig.class);
+	public WakesClient(IEventBus modEventBus, ModContainer modContainer) {
+		modContainer.registerConfig(ModConfig.Type.CLIENT, WakesConfig.GENERAL_SPEC, MOD_ID + "-general.toml");
+		modContainer.registerConfig(ModConfig.Type.CLIENT, WakesConfig.APPEARANCE_SPEC, MOD_ID + "-appearance.toml");
+		modContainer.registerConfig(ModConfig.Type.CLIENT, WakesConfig.DEBUG_SPEC, MOD_ID + "-debug.toml");
 		ModParticles.register(modEventBus);
 		SplashPlaneRenderer.initSplashPlane();
-		//WorldRenderEvents.AFTER_TRANSLUCENT.register(new SplashPlaneRenderer());
 		SplashPlaneRenderer.init();
 		modEventBus.addListener(ModParticles::registerParticleFactories);
 		modEventBus.addListener(this::onResourceReload);

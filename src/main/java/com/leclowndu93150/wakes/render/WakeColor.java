@@ -47,14 +47,14 @@ public class WakeColor {
     }
 
     private static double invertedLogisticCurve(float x) {
-        float k = WakesConfig.shaderLightPassthrough;
+        float k = WakesConfig.APPEARANCE.shaderLightPassthrough.get().floatValue();
         return WakesClient.areShadersEnabled ? k * (4 * Math.pow(x - 0.5f, 3) + 0.5f) : x;
     }
 
     public static int sampleColor(float waveEqAvg, int fluidCol, int lightColor, float opacity) {
         WakeColor tint = new WakeColor(fluidCol);
         double clampedRange = 1 / (1 + Math.exp(-0.1 * waveEqAvg));
-        var ranges = WakesConfig.wakeColorIntervals;
+        var ranges = WakesConfig.APPEARANCE.wakeColorIntervals.get();
         int returnIndex = ranges.size();
         for (int i = 0; i < ranges.size(); i++) {
             if (clampedRange < ranges.get(i)) {
@@ -67,7 +67,7 @@ public class WakeColor {
     }
 
     public WakeColor blend(WakeColor tint, int lightColor, float opacity) {
-        double srcA = Math.pow(this.a / 255f, WakesConfig.blendStrength * 10);
+        double srcA = Math.pow(this.a / 255f, WakesConfig.APPEARANCE.blendStrength.getAsDouble() * 10);
         // Pow to make tint color have a larger influence
         
         int r = (int) ((this.r) * (srcA) + (tint.r) * (1 - srcA));

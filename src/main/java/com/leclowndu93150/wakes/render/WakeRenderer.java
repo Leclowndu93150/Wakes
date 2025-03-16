@@ -44,7 +44,7 @@ public class WakeRenderer {
             return;
         }
 
-        if (WakesConfig.disableMod) {
+        if (WakesConfig.GENERAL.disableMod.get()) {
             WakesDebugInfo.quadsRendered = 0;
             return;
         }

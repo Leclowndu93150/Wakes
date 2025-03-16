@@ -27,7 +27,7 @@ public class WakeDebugRenderer {
         WakeHandler wakeHandler = WakeHandler.getInstance().orElse(null);
         if (wakeHandler == null) return;
 
-        if (WakesConfig.drawDebugBoxes) {
+        if (WakesConfig.DEBUG.drawDebugBoxes.get()) {
             PoseStack poseStack = event.getPoseStack();
             MultiBufferSource.BufferSource bufferSource = event.getLevelRenderer().renderBuffers.bufferSource();
             Vec3 cameraPos = event.getCamera().getPosition();

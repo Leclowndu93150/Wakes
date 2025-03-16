@@ -30,7 +30,7 @@ public abstract class SimulationNode {
 
     public int getPixelColor(int x, int z, int fluidCol, int lightCol, float opacity) {
         float waveEqAvg = (this.u[0][z + 1][x + 1] + this.u[1][z + 1][x + 1] + this.u[2][z + 1][x + 1]) / 3;
-        if (WakesConfig.debugColors) {
+        if (WakesConfig.DEBUG.debugColors.get()) {
             int clampedRange = (int) (255 * (2 / (1 + Math.exp(-0.1 * waveEqAvg)) - 1));
             return new WakeColor(Math.max(-clampedRange, 0), Math.max(clampedRange, 0), 0, 255).abgr;
         }
@@ -45,8 +45,8 @@ public abstract class SimulationNode {
         public void tick(@Nullable Float velocity, @Nullable SimulationNode NORTH, @Nullable SimulationNode SOUTH, @Nullable SimulationNode EAST, @Nullable SimulationNode WEST) {
             float time = 20f; // ticks
             // TODO CHANGE "16" TO ACTUAL RES? MAYBE?
-            float alpha = (float) Math.pow(WakesConfig.wavePropagationFactor * 16f / time, 2);
-            float beta = (float) (Math.log(10 * WakesConfig.waveDecayFactor + 10) / Math.log(20)); // Logarithmic scale
+            float alpha = (float) Math.pow(WakesConfig.GENERAL.wavePropagationFactor.get() * 16f / time, 2);
+            float beta = (float) (Math.log(10 * WakesConfig.GENERAL.waveDecayFactor.get() + 10) / Math.log(20)); // Logarithmic scale
 
             for (int i = 2; i >= 1; i--) {
                 if (NORTH != null) this.u[i][0] = NORTH.u[i][res];
@@ -86,7 +86,7 @@ public abstract class SimulationNode {
         public void tick(@Nullable Float velocity, @Nullable SimulationNode NORTH, @Nullable SimulationNode SOUTH, @Nullable SimulationNode EAST, @Nullable SimulationNode WEST) {
             double t = System.currentTimeMillis() / (double) 1000;
             if (velocity == null) return;
-            int p = (int) (14 * Math.min(1f, 2 * velocity / WakesConfig.maxSplashPlaneVelocity));
+            int p = (int) (14 * Math.min(1f, 2 * velocity / WakesConfig.APPEARANCE.maxSplashPlaneVelocity.get()));
             for (int z = 1; z < res+1; z++) {
                 for (int x = 1; x < res+1; x++) {
                     this.u[0][z][x] = 0;

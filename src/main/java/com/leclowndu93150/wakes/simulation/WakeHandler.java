@@ -20,7 +20,7 @@ public class WakeHandler {
     private final int maxY;
     private ArrayList<SplashPlaneParticle> splashPlanes;
 
-    public static Resolution resolution = WakesConfig.wakeResolution;
+    public static Resolution resolution = WakesConfig.APPEARANCE.wakeResolution.get();
 
     public static boolean resolutionResetScheduled = false;
 
@@ -56,8 +56,8 @@ public class WakeHandler {
     }
 
     public void tick() {
-        if (WakesConfig.wakeResolution.res != WakeHandler.resolution.res) {
-            scheduleResolutionChange(WakesConfig.wakeResolution);
+        if (WakesConfig.APPEARANCE.wakeResolution.get().res != WakeHandler.resolution.res) {
+            scheduleResolutionChange(WakesConfig.APPEARANCE.wakeResolution.get());
         }
         for (int i = 0; i < this.maxY - this.minY; i++) {
             Queue<WakeNode> pendingNodes = this.toBeInserted[i];
@@ -146,7 +146,7 @@ public class WakeHandler {
 
     private void changeResolution() {
         this.reset();
-        WakeHandler.resolution = WakesConfig.wakeResolution;
+        WakeHandler.resolution = WakesConfig.APPEARANCE.wakeResolution.get();
         resolutionResetScheduled = false;
     }
 

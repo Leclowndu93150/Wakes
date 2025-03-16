@@ -29,13 +29,13 @@ public enum RenderType {
     }
 
     public static Supplier<ShaderInstance> getProgram() {
-        if (WakesConfig.renderType == RenderType.AUTO) {
+        if (WakesConfig.DEBUG.renderType.get() == RenderType.AUTO) {
             if (WakesClient.areShadersEnabled) {
                 return ENTITY_TRANSLUCENT_CULL.program;
             } else {
                 return CUSTOM.program;
             }
         }
-        return WakesConfig.renderType.program;
+        return WakesConfig.DEBUG.renderType.get().program;
     }
 }

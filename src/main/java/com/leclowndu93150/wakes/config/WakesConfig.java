@@ -5,78 +5,207 @@ import com.leclowndu93150.wakes.config.enums.Resolution;
 import com.leclowndu93150.wakes.render.enums.RenderType;
 import com.leclowndu93150.wakes.render.WakeColor;
 import com.google.common.collect.Lists;
-import eu.midnightdust.lib.config.MidnightConfig;
-import net.neoforged.neoforge.client.gui.ModListScreen;
-
+import net.neoforged.neoforge.common.ModConfigSpec;
 import java.util.List;
 
-public class WakesConfig extends MidnightConfig {
-    public static final String GENERAL = "general";
-    public static final String APPEARANCE = "appearance";
-    public static final String DEBUG = "debug";
+public class WakesConfig {
+    public static final ModConfigSpec GENERAL_SPEC;
+    public static final ModConfigSpec APPEARANCE_SPEC;
+    public static final ModConfigSpec DEBUG_SPEC;
 
-    // Debug
-    @Entry(category = GENERAL) public static boolean disableMod = false; // TODO SWITCH TO ENABLE MOD TOGGLE
-    @Entry(category = GENERAL) public static boolean pickBoat = true;
+    public static final General GENERAL;
+    public static final Appearance APPEARANCE;
+    public static final Debug DEBUG;
 
+    static {
+        ModConfigSpec.Builder generalBuilder = new ModConfigSpec.Builder();
+        ModConfigSpec.Builder appearanceBuilder = new ModConfigSpec.Builder();
+        ModConfigSpec.Builder debugBuilder = new ModConfigSpec.Builder();
 
-    // Spawning
-    @Comment(category = GENERAL, centered = true) public static Comment spawningRuleDivider;
-    @Entry(category = GENERAL) public static EffectSpawningRule boatSpawning = EffectSpawningRule.SIMULATION_AND_PLANES;
-    @Entry(category = GENERAL) public static EffectSpawningRule playerSpawning = EffectSpawningRule.ONLY_SIMULATION;
-    @Entry(category = GENERAL) public static EffectSpawningRule otherPlayersSpawning = EffectSpawningRule.ONLY_SIMULATION;
-    @Entry(category = GENERAL) public static EffectSpawningRule mobSpawning = EffectSpawningRule.ONLY_SIMULATION;
-    @Entry(category = GENERAL) public static EffectSpawningRule itemSpawning = EffectSpawningRule.ONLY_SIMULATION;
+        GENERAL = new General(generalBuilder);
+        APPEARANCE = new Appearance(appearanceBuilder);
+        DEBUG = new Debug(debugBuilder);
 
-    @Comment(category = GENERAL, centered = true) public static Comment wakeBehaviourDivider;
-    @Entry(category = GENERAL) public static float wavePropagationFactor = 0.95f;
-    @Entry(category = GENERAL) public static float waveDecayFactor = 0.5f;
-    @Entry(category = GENERAL) public static int initialStrength = 20;
-    @Entry(category = GENERAL) public static int paddleStrength = 100;
-    @Entry(category = GENERAL) public static int splashStrength = 100;
+        GENERAL_SPEC = generalBuilder.build();
+        APPEARANCE_SPEC = appearanceBuilder.build();
+        DEBUG_SPEC = debugBuilder.build();
+    }
 
+    public static class General {
+        public final ModConfigSpec.BooleanValue disableMod;
+        public final ModConfigSpec.BooleanValue pickBoat;
 
-    @Entry(category = APPEARANCE) public static Resolution wakeResolution = Resolution.SIXTEEN;
-    @Entry(category = APPEARANCE, isSlider = true, min = 0, max = 1) public static float wakeOpacity = 1f;
-    @Entry(category = APPEARANCE, isSlider = true, min = 0, max = 1) public static float blendStrength = 0.5f;
-    @Entry(category = APPEARANCE) public static boolean firstPersonSplashPlane = false;
-    @Entry(category = APPEARANCE) public static boolean spawnParticles = true;
-    @Entry(category = APPEARANCE, isSlider = true, min = 0, max = 1) public static float shaderLightPassthrough = 0.5f;
+        public final ModConfigSpec.EnumValue<EffectSpawningRule> boatSpawning;
+        public final ModConfigSpec.EnumValue<EffectSpawningRule> playerSpawning;
+        public final ModConfigSpec.EnumValue<EffectSpawningRule> otherPlayersSpawning;
+        public final ModConfigSpec.EnumValue<EffectSpawningRule> mobSpawning;
+        public final ModConfigSpec.EnumValue<EffectSpawningRule> itemSpawning;
 
-    // Splash plane
-    @Comment(category = APPEARANCE, centered = true) public static Comment splashPlaneDivider;
-    @Entry(category = APPEARANCE, isSlider = true, min = -5f, max = 5f) public static float splashPlaneWidth = 2f;
-    @Entry(category = APPEARANCE, isSlider = true, min = -5f, max = 5f) public static float splashPlaneHeight = 1.5f;
-    @Entry(category = APPEARANCE, isSlider = true, min = -5f, max = 5f) public static float splashPlaneDepth = 3f;
-    @Entry(category = APPEARANCE, isSlider = true, min = -5f, max = 5f) public static float splashPlaneOffset = 0f;
-    @Entry(category = APPEARANCE, isSlider = true, min = -5f, max = 5f) public static float splashPlaneGap = 1f;
-    @Entry(category = APPEARANCE, isSlider = true, min = -5f, max = 5f) public static int splashPlaneResolution = 5;
-    @Entry(category = APPEARANCE, isSlider = true, min = -5f, max = 5f) public static float maxSplashPlaneVelocity = 0.5f;
-    @Entry(category = APPEARANCE, isSlider = true, min = -5f, max = 5f) public static float splashPlaneScale = 0.8f;
+        public final ModConfigSpec.DoubleValue wavePropagationFactor;
+        public final ModConfigSpec.DoubleValue waveDecayFactor;
+        public final ModConfigSpec.IntValue initialStrength;
+        public final ModConfigSpec.IntValue paddleStrength;
+        public final ModConfigSpec.IntValue splashStrength;
 
-    @Hidden @Entry(category = APPEARANCE) public static List<Float> wakeColorIntervals = Lists.newArrayList(0.05f, 0.15f, 0.2f, 0.35f, 0.52f, 0.6f, 0.7f, 0.9f);
-    @Hidden @Entry(selectionMode = 1, category = APPEARANCE, isColor = true) public static List<String> wakeColors = Lists.newArrayList(
-            "#00000000", // TRANSPARENT
-            "#289399a6", // DARK GRAY
-            "#649ea5b0", // GRAY
-            "#b4c4cad1", // LIGHT GRAY
-            "#00000000", // TRANSPARENT
-            "#b4c4cad1", // LIGHT GRAY
-            "#ffffffff", // WHITE
-            "#b4c4cad1", // LIGHT GRAY
-            "#649ea5b0" // GRAY
-    );
-    public static List<Float> defaultWakeColorIntervals = Lists.newArrayList(wakeColorIntervals);
-    public static List<String> defaultWakeColors = Lists.newArrayList(wakeColors);
+        public General(ModConfigSpec.Builder builder) {
+            disableMod = builder
+                    .comment("Disable the mod functionality")
+                    .define("disableMod", false);
 
-    @Entry(category = DEBUG) public static boolean debugColors = false;
-    @Entry(category = DEBUG) public static boolean drawDebugBoxes = false;
-    @Entry(category = DEBUG) public static boolean showDebugInfo = false;
-    @Entry(category = DEBUG, isSlider = true, min = 1, max = 6) public static int floodFillDistance = 2;
-    @Entry(category = DEBUG, isSlider = true, min = 1, max = 20) public static int floodFillTickDelay = 2;
-    @Entry(category = DEBUG) public static RenderType renderType = RenderType.AUTO;
+            pickBoat = builder
+                    .define("pickBoat", true);
+
+            builder.comment("Spawning Rules").push("spawningRules");
+
+            boatSpawning = builder
+                    .defineEnum("boatSpawning", EffectSpawningRule.SIMULATION_AND_PLANES);
+
+            playerSpawning = builder
+                    .defineEnum("playerSpawning", EffectSpawningRule.ONLY_SIMULATION);
+
+            otherPlayersSpawning = builder
+                    .defineEnum("otherPlayersSpawning", EffectSpawningRule.ONLY_SIMULATION);
+
+            mobSpawning = builder
+                    .defineEnum("mobSpawning", EffectSpawningRule.ONLY_SIMULATION);
+
+            itemSpawning = builder
+                    .defineEnum("itemSpawning", EffectSpawningRule.ONLY_SIMULATION);
+
+            builder.pop();
+
+            builder.comment("Wake Behavior").push("wakeBehavior");
+
+            wavePropagationFactor = builder
+                    .defineInRange("wavePropagationFactor", 0.95d, 0.0d, 1.0d);
+
+            waveDecayFactor = builder
+                    .defineInRange("waveDecayFactor", 0.5d, 0.0d, 1.0d);
+
+            initialStrength = builder
+                    .defineInRange("initialStrength", 20, 0, Integer.MAX_VALUE);
+
+            paddleStrength = builder
+                    .defineInRange("paddleStrength", 100, 0, Integer.MAX_VALUE);
+
+            splashStrength = builder
+                    .defineInRange("splashStrength", 100, 0, Integer.MAX_VALUE);
+
+            builder.pop();
+        }
+    }
+
+    public static class Appearance {
+        public final ModConfigSpec.EnumValue<Resolution> wakeResolution;
+        public final ModConfigSpec.DoubleValue wakeOpacity;
+        public final ModConfigSpec.DoubleValue blendStrength;
+        public final ModConfigSpec.BooleanValue firstPersonSplashPlane;
+        public final ModConfigSpec.BooleanValue spawnParticles;
+        public final ModConfigSpec.DoubleValue shaderLightPassthrough;
+
+        public final ModConfigSpec.DoubleValue splashPlaneWidth;
+        public final ModConfigSpec.DoubleValue splashPlaneHeight;
+        public final ModConfigSpec.DoubleValue splashPlaneDepth;
+        public final ModConfigSpec.DoubleValue splashPlaneOffset;
+        public final ModConfigSpec.DoubleValue splashPlaneGap;
+        public final ModConfigSpec.IntValue splashPlaneResolution;
+        public final ModConfigSpec.DoubleValue maxSplashPlaneVelocity;
+        public final ModConfigSpec.DoubleValue splashPlaneScale;
+
+        public final ModConfigSpec.ConfigValue<List<? extends Double>> wakeColorIntervals;
+        public final ModConfigSpec.ConfigValue<List<? extends String>> wakeColors;
+
+        public Appearance(ModConfigSpec.Builder builder) {
+            wakeResolution = builder
+                    .defineEnum("wakeResolution", Resolution.SIXTEEN);
+
+            wakeOpacity = builder
+                    .defineInRange("wakeOpacity", 1.0d, 0.0d, 1.0d);
+
+            blendStrength = builder
+                    .defineInRange("blendStrength", 0.5d, 0.0d, 1.0d);
+
+            firstPersonSplashPlane = builder
+                    .define("firstPersonSplashPlane", false);
+
+            spawnParticles = builder
+                    .define("spawnParticles", true);
+
+            shaderLightPassthrough = builder
+                    .defineInRange("shaderLightPassthrough", 0.5d, 0.0d, 1.0d);
+
+            builder.comment("Splash Plane Settings").push("splashPlane");
+
+            splashPlaneWidth = builder
+                    .defineInRange("splashPlaneWidth", 2.0d, -5.0d, 5.0d);
+
+            splashPlaneHeight = builder
+                    .defineInRange("splashPlaneHeight", 1.5d, -5.0d, 5.0d);
+
+            splashPlaneDepth = builder
+                    .defineInRange("splashPlaneDepth", 3.0d, -5.0d, 5.0d);
+
+            splashPlaneOffset = builder
+                    .defineInRange("splashPlaneOffset", 0.0d, -5.0d, 5.0d);
+
+            splashPlaneGap = builder
+                    .defineInRange("splashPlaneGap", 1.0d, -5.0d, 5.0d);
+
+            splashPlaneResolution = builder
+                    .defineInRange("splashPlaneResolution", 5, 0, 10);
+
+            maxSplashPlaneVelocity = builder
+                    .defineInRange("maxSplashPlaneVelocity", 0.5d, -5.0d, 5.0d);
+
+            splashPlaneScale = builder
+                    .defineInRange("splashPlaneScale", 0.8d, -5.0d, 5.0d);
+
+            builder.pop();
+
+            List<Double> defaultWakeColorIntervals = Lists.newArrayList(0.05, 0.15, 0.2, 0.35, 0.52, 0.6, 0.7, 0.9);
+            List<String> defaultWakeColors = Lists.newArrayList(
+                    "#00000000", "#289399a6", "#649ea5b0", "#b4c4cad1",
+                    "#00000000", "#b4c4cad1", "#ffffffff", "#b4c4cad1", "#649ea5b0"
+            );
+
+            wakeColorIntervals = builder
+                    .defineList("wakeColorIntervals", defaultWakeColorIntervals, obj -> obj instanceof Double);
+
+            wakeColors = builder
+                    .defineList("wakeColors", defaultWakeColors, obj -> obj instanceof String);
+        }
+    }
+
+    public static class Debug {
+        public final ModConfigSpec.BooleanValue debugColors;
+        public final ModConfigSpec.BooleanValue drawDebugBoxes;
+        public final ModConfigSpec.BooleanValue showDebugInfo;
+        public final ModConfigSpec.IntValue floodFillDistance;
+        public final ModConfigSpec.IntValue floodFillTickDelay;
+        public final ModConfigSpec.EnumValue<RenderType> renderType;
+
+        public Debug(ModConfigSpec.Builder builder) {
+            debugColors = builder
+                    .define("debugColors", false);
+
+            drawDebugBoxes = builder
+                    .define("drawDebugBoxes", false);
+
+            showDebugInfo = builder
+                    .define("showDebugInfo", false);
+
+            floodFillDistance = builder
+                    .defineInRange("floodFillDistance", 2, 1, 6);
+
+            floodFillTickDelay = builder
+                    .defineInRange("floodFillTickDelay", 2, 1, 20);
+
+            renderType = builder
+                    .defineEnum("renderType", RenderType.AUTO);
+        }
+    }
 
     public static WakeColor getWakeColor(int i) {
-        return new WakeColor(wakeColors.get(i));
+        return new WakeColor(APPEARANCE.wakeColors.get().get(i));
     }
 }

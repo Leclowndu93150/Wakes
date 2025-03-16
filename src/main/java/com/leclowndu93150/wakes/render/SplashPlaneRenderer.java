@@ -78,7 +78,7 @@ public class SplashPlaneRenderer {
 
     public static <T extends Entity> void render(T entity, SplashPlaneParticle splashPlane, RenderLevelStageEvent context, PoseStack matrices) {
         if (wakeTextures == null) initTextures();
-        if (WakesConfig.disableMod || !WakesUtils.getEffectRuleFromSource(entity).renderPlanes) {
+        if (WakesConfig.GENERAL.disableMod.get() || !WakesUtils.getEffectRuleFromSource(entity).renderPlanes) {
             return;
         }
         RenderSystem.setShader(RenderType.getProgram());
@@ -89,8 +89,8 @@ public class SplashPlaneRenderer {
         splashPlane.translateMatrix(context, matrices);
         matrices.mulPose(Axis.YP.rotationDegrees(splashPlane.lerpedYaw + 180f));
         float velocity = (float) Math.floor(((ProducesWake) entity).wakes$getHorizontalVelocity() * 20) / 20f;
-        float progress = Math.min(1f, velocity / WakesConfig.maxSplashPlaneVelocity);
-        float scalar = (float) (WakesConfig.splashPlaneScale * Math.sqrt(entity.getBbWidth() * Math.max(1f, progress) + 1) / 3f);
+        float progress = Math.min(1f, velocity / WakesConfig.APPEARANCE.maxSplashPlaneVelocity.get().floatValue());
+        float scalar = (float) (WakesConfig.APPEARANCE.splashPlaneScale.get() * Math.sqrt(entity.getBbWidth() * Math.max(1f, progress) + 1) / 3f);
         matrices.scale(scalar, scalar, scalar);
         Matrix4f matrix = matrices.last().pose();
 
@@ -111,9 +111,9 @@ public class SplashPlaneRenderer {
                 Vec3 vertex = vertices.get(i);
                 Vec3 normal = normals.get(i);
                 buffer.addVertex(matrix,
-                                (float) (s * (vertex.x * WakesConfig.splashPlaneWidth + WakesConfig.splashPlaneGap)),
-                                (float) (vertex.z * WakesConfig.splashPlaneHeight),
-                                (float) (vertex.y * WakesConfig.splashPlaneDepth))
+                                (float) (s * (vertex.x * WakesConfig.APPEARANCE.splashPlaneWidth.get() + WakesConfig.APPEARANCE.splashPlaneGap.get())),
+                                (float) (vertex.z * WakesConfig.APPEARANCE.splashPlaneHeight.get()),
+                                (float) (vertex.y * WakesConfig.APPEARANCE.splashPlaneDepth.get()))
                         .setUv((float) (vertex.x), (float) (vertex.y))
                         .setColor(1.0f, 1.0f, 1.0f, 1.0f);
             }
@@ -146,7 +146,7 @@ public class SplashPlaneRenderer {
     }
 
     private static void distributePoints() {
-        int res = WakesConfig.splashPlaneResolution;
+        int res = WakesConfig.APPEARANCE.splashPlaneResolution.getAsInt();
         points = new ArrayList<>();
 
         for (float i = 0; i < res; i++) {

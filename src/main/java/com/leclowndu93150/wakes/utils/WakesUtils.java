@@ -72,7 +72,7 @@ public class WakesUtils {
             for (WakeNode node : WakeNode.Factory.rowingNodes(boat, y)) {
                 wakeHandler.insert(node);
             }
-            if (WakesConfig.spawnParticles) {
+            if (WakesConfig.APPEARANCE.spawnParticles.get()) {
                 WakesUtils.spawnPaddleSplashCloudParticle(entity.level(), boat);
             }
         }
@@ -85,7 +85,7 @@ public class WakesUtils {
         if (prevPos == null) {
             return;
         }
-        for (WakeNode node : WakeNode.Factory.thickNodeTrail(prevPos.x, prevPos.z, entity.getX(), entity.getZ(), y, WakesConfig.initialStrength, velocity, entity.getBbWidth())) {
+        for (WakeNode node : WakeNode.Factory.thickNodeTrail(prevPos.x, prevPos.z, entity.getX(), entity.getZ(), y, WakesConfig.GENERAL.initialStrength.get(), velocity, entity.getBbWidth())) {
             wakeHandler.insert(node);
         }
     }
@@ -94,30 +94,30 @@ public class WakesUtils {
         if (source instanceof Boat boat) {
             List<Entity> passengers = boat.getPassengers();
             if (passengers.contains(Minecraft.getInstance().player)) {
-                return WakesConfig.boatSpawning;
+                return WakesConfig.GENERAL.boatSpawning.get();
             }
             if (passengers.stream().anyMatch(Entity::isAlwaysTicking)) {
-                return WakesConfig.boatSpawning.mask(WakesConfig.otherPlayersSpawning);
+                return WakesConfig.GENERAL.boatSpawning.get().mask(WakesConfig.GENERAL.otherPlayersSpawning.get());
             }
-            return WakesConfig.boatSpawning;
+            return WakesConfig.GENERAL.boatSpawning.get();
         }
         if (source instanceof Player player) {
             if (player.isSpectator()) {
                 return EffectSpawningRule.DISABLED;
             }
             if (player instanceof LocalPlayer) {
-                return WakesConfig.playerSpawning;
+                return WakesConfig.GENERAL.playerSpawning.get();
             }
             if (player instanceof RemotePlayer) {
-                return WakesConfig.otherPlayersSpawning;
+                return WakesConfig.GENERAL.otherPlayersSpawning.get();
             }
             return EffectSpawningRule.DISABLED;
         }
         if (source instanceof LivingEntity) {
-            return WakesConfig.mobSpawning;
+            return WakesConfig.GENERAL.mobSpawning.get();
         }
         if (source instanceof ItemEntity) {
-            return WakesConfig.itemSpawning;
+            return WakesConfig.GENERAL.itemSpawning.get();
         }
         return EffectSpawningRule.DISABLED;
     }

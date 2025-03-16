@@ -9,9 +9,7 @@ import com.leclowndu93150.wakes.simulation.WakeHandler;
 import com.leclowndu93150.wakes.utils.WakesUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.client.Camera;
-import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.*;
@@ -67,7 +65,7 @@ public class SplashPlaneParticle extends Particle {
 
     @Override
     public void tick() {
-        if (WakesConfig.disableMod || !WakesUtils.getEffectRuleFromSource(this.owner).renderPlanes) {
+        if (WakesConfig.GENERAL.disableMod.get() || !WakesUtils.getEffectRuleFromSource(this.owner).renderPlanes) {
             this.remove();
         }
         this.xo = this.x;
@@ -95,11 +93,11 @@ public class SplashPlaneParticle extends Particle {
             this.yaw = 90f - (float) (180f / Math.PI * Math.atan2(vel.z, vel.x));
         }
         this.direction = Vec3.directionFromRotation(0, -this.yaw);
-        Vec3 planeOffset = direction.scale(this.owner.getBbWidth() + WakesConfig.splashPlaneOffset);
+        Vec3 planeOffset = direction.scale(this.owner.getBbWidth() + WakesConfig.APPEARANCE.splashPlaneOffset.get());
         Vec3 planePos = this.owner.position().add(planeOffset);
         this.setPos(planePos.x, wakeProducer.wakes$wakeHeight(), planePos.z);
 
-        if (vel.length() / WakesConfig.maxSplashPlaneVelocity > 0.3f && WakesConfig.spawnParticles) {
+        if (vel.length() / WakesConfig.APPEARANCE.maxSplashPlaneVelocity.get() > 0.3f && WakesConfig.APPEARANCE.spawnParticles.get()) {
             Random random = new Random();
             Vec3 particleOffset = new Vec3(-direction.z, 0, direction.x).scale(random.nextDouble() * this.owner.getBbWidth() / 4);
             Vec3 particlePos = this.owner.position().add(direction.scale(this.owner.getBbWidth() - 0.3));
@@ -135,7 +133,7 @@ public class SplashPlaneParticle extends Particle {
                 LightTexture.block(lightCoordinate),
                 LightTexture.sky(lightCoordinate)
         );
-        float opacity = WakesConfig.wakeOpacity * 0.9f;
+        float opacity = WakesConfig.APPEARANCE.wakeOpacity.get().floatValue() * 0.9f;
         int res = WakeHandler.resolution.res;
         for (int r = 0; r < res; r++) {
             for (int c = 0; c < res; c++) {
@@ -151,7 +149,7 @@ public class SplashPlaneParticle extends Particle {
         this.isRenderReady = false;
         if (this.removed) return;
         if (Minecraft.getInstance().options.getCameraType().isFirstPerson() &&
-                !WakesConfig.firstPersonSplashPlane &&
+                !WakesConfig.APPEARANCE.firstPersonSplashPlane.get() &&
                 this.owner instanceof LocalPlayer) {
             return;
         }

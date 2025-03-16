@@ -117,7 +117,7 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
 		this.numericalVelocity = vel;
 		this.horizontalNumericalVelocity = vel.horizontalDistance();
 
-		if (WakesConfig.disableMod) {
+		if (WakesConfig.GENERAL.disableMod.get()) {
 			return;
 		}
 
@@ -138,7 +138,7 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
 
 	@Inject(at = @At("TAIL"), method = "doWaterSplashEffect")
 	private void onSwimmingStart(CallbackInfo ci) {
-		if (WakesConfig.disableMod) {
+		if (WakesConfig.GENERAL.disableMod.get()) {
 			return;
 		}
 		Entity thisEntity = ((Entity) (Object) this);
