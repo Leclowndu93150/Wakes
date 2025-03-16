@@ -15,20 +15,26 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+import net.neoforged.neoforge.common.NeoForge;
 import org.joml.Matrix4f;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class SplashPlaneRenderer implements WorldRenderEvents.AfterTranslucent {
+@OnlyIn(Dist.CLIENT)
+public class SplashPlaneRenderer {
 
     private static ArrayList<Vector2D> points;
     private static List<Triangle2D> triangles;
@@ -47,21 +53,30 @@ public class SplashPlaneRenderer implements WorldRenderEvents.AfterTranslucent {
 
     private static final double SQRT_8 = Math.sqrt(8);
 
-    @Override
-    public void afterTranslucent(WorldRenderContext context) {
+    // Register the renderer with NeoForge event bus
+    public static void init() {
+        NeoForge.EVENT_BUS.register(SplashPlaneRenderer.class);
+    }
+
+    @SubscribeEvent(priority = EventPriority.NORMAL)
+    public static void onRenderLevel(RenderLevelStageEvent event) {
+        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) {
+            return;
+        }
+
         if (WakeHandler.getInstance().isEmpty()) {
             return;
         }
+
         WakeHandler wakeHandler = WakeHandler.getInstance().get();
-        for (SplashPlaneParticle particle : wakeHandler.getVisible(context.frustum(), SplashPlaneParticle.class)) {
+        for (SplashPlaneParticle particle : wakeHandler.getVisible(event.getFrustum(), SplashPlaneParticle.class)) {
             if (particle.isRenderReady) {
-                SplashPlaneRenderer.render(particle.owner, particle, context, context.matrixStack());
+                SplashPlaneRenderer.render(particle.owner, particle, event, event.getPoseStack());
             }
         }
     }
 
-
-    public static <T extends Entity> void render(T entity, SplashPlaneParticle splashPlane, WorldRenderContext context, PoseStack matrices) {
+    public static <T extends Entity> void render(T entity, SplashPlaneParticle splashPlane, RenderLevelStageEvent context, PoseStack matrices) {
         if (wakeTextures == null) initTextures();
         if (WakesConfig.disableMod || !WakesUtils.getEffectRuleFromSource(entity).renderPlanes) {
             return;
@@ -86,7 +101,6 @@ public class SplashPlaneRenderer implements WorldRenderEvents.AfterTranslucent {
     }
 
     private static void renderSurface(Matrix4f matrix) {
-        //Use a shader that doesn't care about lighting
         RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
 
         BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_TEX_COLOR);

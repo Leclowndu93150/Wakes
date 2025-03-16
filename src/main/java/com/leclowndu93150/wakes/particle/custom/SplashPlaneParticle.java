@@ -11,6 +11,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.client.Camera;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.*;
@@ -25,6 +26,7 @@ import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.system.MemoryUtil;
 
@@ -165,9 +167,9 @@ public class SplashPlaneParticle extends Particle {
         this.isRenderReady = true;
     }
 
-    public void translateMatrix(WorldRenderContext context, PoseStack matrices) {
-        Vec3 cameraPos = context.camera().getPosition();
-        float tickDelta = context.tickCounter().getGameTimeDeltaPartialTick(true);
+    public void translateMatrix(RenderLevelStageEvent context, PoseStack matrices) {
+        Vec3 cameraPos = context.getCamera().getPosition();
+        float tickDelta = context.getPartialTick().getGameTimeDeltaPartialTick(true);
         float x = (float) (Mth.lerp(tickDelta, this.xo, this.x) - cameraPos.x());
         float y = (float) (Mth.lerp(tickDelta, this.yo, this.y) - cameraPos.y());
         float z = (float) (Mth.lerp(tickDelta, this.zo, this.z) - cameraPos.z());

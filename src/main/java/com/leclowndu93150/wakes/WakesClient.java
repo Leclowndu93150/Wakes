@@ -37,7 +37,8 @@ public class WakesClient {
 		MidnightConfig.init(WakesClient.MOD_ID, WakesConfig.class);
 		ModParticles.register(modEventBus);
 		SplashPlaneRenderer.initSplashPlane();
-		WorldRenderEvents.AFTER_TRANSLUCENT.register(new SplashPlaneRenderer());
+		//WorldRenderEvents.AFTER_TRANSLUCENT.register(new SplashPlaneRenderer());
+		SplashPlaneRenderer.init();
 		modEventBus.addListener(ModParticles::registerParticleFactories);
 		modEventBus.addListener(this::onResourceReload);
 	}
