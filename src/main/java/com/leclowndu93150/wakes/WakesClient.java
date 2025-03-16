@@ -12,6 +12,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import org.slf4j.Logger;
@@ -30,14 +31,16 @@ public class WakesClient {
 	public static boolean areShadersEnabled = false;
 
 	public WakesClient(IEventBus modEventBus, ModContainer modContainer) {
-		modContainer.registerConfig(ModConfig.Type.CLIENT, WakesConfig.GENERAL_SPEC, MOD_ID + "-general.toml");
-		modContainer.registerConfig(ModConfig.Type.CLIENT, WakesConfig.APPEARANCE_SPEC, MOD_ID + "-appearance.toml");
-		modContainer.registerConfig(ModConfig.Type.CLIENT, WakesConfig.DEBUG_SPEC, MOD_ID + "-debug.toml");
+		modContainer.registerConfig(ModConfig.Type.CLIENT, WakesConfig.CLIENT_SPEC, MOD_ID + "-client.toml");
 		ModParticles.register(modEventBus);
-		SplashPlaneRenderer.initSplashPlane();
 		SplashPlaneRenderer.init();
 		modEventBus.addListener(ModParticles::registerParticleFactories);
 		modEventBus.addListener(this::onResourceReload);
+		modEventBus.addListener(this::onClientSetup);
+	}
+
+	private void onClientSetup(FMLClientSetupEvent event) {
+		SplashPlaneRenderer.setup();
 	}
 
 	private void onResourceReload(RegisterClientReloadListenersEvent event) {

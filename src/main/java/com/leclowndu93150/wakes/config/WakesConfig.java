@@ -9,26 +9,20 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 import java.util.List;
 
 public class WakesConfig {
-    public static final ModConfigSpec GENERAL_SPEC;
-    public static final ModConfigSpec APPEARANCE_SPEC;
-    public static final ModConfigSpec DEBUG_SPEC;
+    public static final ModConfigSpec CLIENT_SPEC;
 
     public static final General GENERAL;
     public static final Appearance APPEARANCE;
     public static final Debug DEBUG;
 
     static {
-        ModConfigSpec.Builder generalBuilder = new ModConfigSpec.Builder();
-        ModConfigSpec.Builder appearanceBuilder = new ModConfigSpec.Builder();
-        ModConfigSpec.Builder debugBuilder = new ModConfigSpec.Builder();
+        ModConfigSpec.Builder clientBuilder = new ModConfigSpec.Builder();
 
-        GENERAL = new General(generalBuilder);
-        APPEARANCE = new Appearance(appearanceBuilder);
-        DEBUG = new Debug(debugBuilder);
+        GENERAL = new General(clientBuilder);
+        APPEARANCE = new Appearance(clientBuilder);
+        DEBUG = new Debug(clientBuilder);
 
-        GENERAL_SPEC = generalBuilder.build();
-        APPEARANCE_SPEC = appearanceBuilder.build();
-        DEBUG_SPEC = debugBuilder.build();
+        CLIENT_SPEC = clientBuilder.build();
     }
 
     public static class General {

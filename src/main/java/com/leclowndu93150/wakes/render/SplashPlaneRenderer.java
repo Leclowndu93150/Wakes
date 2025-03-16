@@ -53,9 +53,13 @@ public class SplashPlaneRenderer {
 
     private static final double SQRT_8 = Math.sqrt(8);
 
-    // Register the renderer with NeoForge event bus
     public static void init() {
         NeoForge.EVENT_BUS.register(SplashPlaneRenderer.class);
+    }
+
+    public static void setup(){
+        distributePoints();
+        generateMesh();
     }
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
@@ -177,10 +181,5 @@ public class SplashPlaneRenderer {
                 normals.add(normal(x, y));
             }
         }
-    }
-
-    public static void initSplashPlane() {
-        distributePoints();
-        generateMesh();
     }
 }
