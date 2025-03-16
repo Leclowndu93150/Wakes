@@ -57,16 +57,6 @@ neoForge {
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
 
-        data {
-            data()
-
-            // example of overriding the workingDirectory set in configureEach above, uncomment if you want to use it
-            // gameDirectory = project.file('run-data')
-
-            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
-            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
-        }
-
         // applies to all the run configs above
         configureEach {
             // Recommended logging data for a userdev environment
@@ -100,9 +90,9 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
 
-    compileOnlyApi "curse.maven:irisshaders-455508:6213632"
+    implementation "curse.maven:irisshaders-455508:6213645"
     //implementation(files("libs/satin-1.0.0.jar"))
-    implementation "curse.maven:sodium-394468:6211307"
+    implementation "curse.maven:sodium-394468:6240357"
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

@@ -2,6 +2,7 @@ package com.leclowndu93150.wakes.simulation;
 
 import com.leclowndu93150.wakes.config.WakesConfig;
 import com.leclowndu93150.wakes.debug.WakesDebugInfo;
+import com.mojang.blaze3d.pipeline.TextureTarget;
 import org.lwjgl.system.MemoryUtil;
 
 import java.util.ArrayList;
@@ -176,21 +177,30 @@ public class Brick {
                 if (node != null) {
                     fluidColor = BiomeColors.getAverageWaterColor(world, node.blockPos());
                     int lightCoordinate = LevelRenderer.getLightColor(world, node.blockPos());
-                    lightCol = Minecraft.getInstance().gameRenderer.lightTexture().lightPixels.getPixelRGBA(
-                            LightTexture.block(lightCoordinate),
-                            LightTexture.sky(lightCoordinate)
-                    );
-                    // TODO LERP LIGHT FROM SURROUNDING BLOCKS
+
+                    // Extract block and sky light levels
+                    int blockLight = LightTexture.block(lightCoordinate);
+                    int skyLight = LightTexture.sky(lightCoordinate);
+
+                    // Calculate brightness using Minecraft's own formula
+                    float blockBrightness = LightTexture.getBrightness(world.dimensionType(), blockLight);
+                    float skyBrightness = LightTexture.getBrightness(world.dimensionType(), skyLight);
+
+                    // Combine brightness values
+                    float brightness = Math.max(blockBrightness, skyBrightness);
+
+                    // Create an RGB color (white light with intensity)
+                    int light = (int)(brightness * 255.0f);
+                    lightCol = (255 << 24) | (light << 16) | (light << 8) | light;
+
                     opacity = (float) ((-Math.pow(node.t, 2) + 1) * WakesConfig.APPEARANCE.wakeOpacity.get());
                 }
 
-                // TODO MASS SET PIXELS TO NO COLOR IF NODE DOESNT EXIST (NEED TO REORDER PIXELS STORED?)
                 long nodeOffset = texRes * 4L * (((long) z * dim * texRes) + (long) x);
                 for (int r = 0; r < texRes; r++) {
                     for (int c = 0; c < texRes; c++) {
                         int color = 0;
                         if (node != null) {
-                            // TODO USE SHADERS TO COLOR THE WAKES?
                             color = node.simulationNode.getPixelColor(c, r, fluidColor, lightCol, opacity);
                         }
                         long pixelOffset = 4L * (((long) r * dim * texRes) + c);
@@ -201,4 +211,5 @@ public class Brick {
         }
         hasPopulatedPixels = true;
     }
+
 }
