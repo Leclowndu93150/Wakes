@@ -161,7 +161,7 @@ public class ColorPicker extends AbstractWidget {
         int w = bounds.width;
         int h = bounds.height;
 
-        RenderSystem.setShader(WakesClient.POSITION_TEXTURE_HSV::getProgram);
+        RenderSystem.setShader(() -> WakesClient.POSITION_TEXTURE_HSV);
         RenderSystem.setShaderTexture(0, GradientSlider.BLANK_SLIDER_TEXTURE);
         float hue = ((GradientSlider) widgets.get("hueSlider").getWidget()).getValue();
 
@@ -332,7 +332,7 @@ public class ColorPicker extends AbstractWidget {
             int leftCol, rightCol;
             if (colored) {
                 context.setColor(1.0F, 1.0F, 1.0F, 0.3f);
-                RenderSystem.setShader(WakesClient.POSITION_TEXTURE_HSV::getProgram);
+                RenderSystem.setShader(() -> WakesClient.POSITION_TEXTURE_HSV);
                 RenderSystem.setShaderTexture(0, BLANK_SLIDER_TEXTURE);
 
                 // AAHHSSVV
