@@ -10,9 +10,14 @@ import com.leclowndu93150.wakes.simulation.WakeHandler;
 import com.leclowndu93150.wakes.simulation.WakeNode;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.mojang.blaze3d.platform.GlConst;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.player.RemotePlayer;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -36,6 +41,16 @@ public class WakesUtils {
         for (WakeNode node : WakeNode.Factory.splashNodes(entity, (int) Math.floor(((ProducesWake) entity).wakes$wakeHeight()))) {
             wakeHandler.insert(node);
         }
+    }
+
+    public static int getLightColor(LightTexture lightmapTextureManager, Level world, BlockPos blockPos) {
+        int lightCoordinate = LevelRenderer.getLightColor(world, blockPos);
+        int x = LightTexture.block(lightCoordinate);
+        int y = LightTexture.sky(lightCoordinate);
+        lightmapTextureManager.target.bindRead();
+        int out = 0;
+        GlStateManager._readPixels(x, y, 16, 16, GlConst.GL_BGR, GlConst.GL_UNSIGNED_INT, out);
+        return out;
     }
 
     public static void spawnPaddleSplashCloudParticle(Level world, Boat boat) {

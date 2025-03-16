@@ -2,6 +2,7 @@ package com.leclowndu93150.wakes.simulation;
 
 import com.leclowndu93150.wakes.config.WakesConfig;
 import com.leclowndu93150.wakes.debug.WakesDebugInfo;
+import com.leclowndu93150.wakes.utils.WakesUtils;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import org.lwjgl.system.MemoryUtil;
 
@@ -176,22 +177,8 @@ public class Brick {
                 float opacity = 0;
                 if (node != null) {
                     fluidColor = BiomeColors.getAverageWaterColor(world, node.blockPos());
-                    int lightCoordinate = LevelRenderer.getLightColor(world, node.blockPos());
 
-                    // Extract block and sky light levels
-                    int blockLight = LightTexture.block(lightCoordinate);
-                    int skyLight = LightTexture.sky(lightCoordinate);
-
-                    // Calculate brightness using Minecraft's own formula
-                    float blockBrightness = LightTexture.getBrightness(world.dimensionType(), blockLight);
-                    float skyBrightness = LightTexture.getBrightness(world.dimensionType(), skyLight);
-
-                    // Combine brightness values
-                    float brightness = Math.max(blockBrightness, skyBrightness);
-
-                    // Create an RGB color (white light with intensity)
-                    int light = (int)(brightness * 255.0f);
-                    lightCol = (255 << 24) | (light << 16) | (light << 8) | light;
+                    lightCol = WakesUtils.getLightColor(Minecraft.getInstance().gameRenderer.lightTexture(), Minecraft.getInstance().level, node.blockPos());
 
                     opacity = (float) ((-Math.pow(node.t, 2) + 1) * WakesConfig.APPEARANCE.wakeOpacity.get());
                 }

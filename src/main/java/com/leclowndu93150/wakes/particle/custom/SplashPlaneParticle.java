@@ -128,20 +128,8 @@ public class SplashPlaneParticle extends Particle {
 
     public void populatePixels() {
         int fluidColor = BiomeColors.getAverageWaterColor(level, this.owner.blockPosition());
-        int lightCoordinate = LevelRenderer.getLightColor(level, this.owner.blockPosition());
 
-        // Extract block and sky light levels
-        int blockLight = LightTexture.block(lightCoordinate);
-        int skyLight = LightTexture.sky(lightCoordinate);
-
-        // Calculate brightness using Minecraft's formula
-        float blockBrightness = LightTexture.getBrightness(level.dimensionType(), blockLight);
-        float skyBrightness = LightTexture.getBrightness(level.dimensionType(), skyLight);
-
-        // Combine brightness values and convert to an RGB color
-        float brightness = Math.max(blockBrightness, skyBrightness);
-        int light = (int)(brightness * 255.0f);
-        int lightCol = (255 << 24) | (light << 16) | (light << 8) | light;
+        int lightCol = WakesUtils.getLightColor(Minecraft.getInstance().gameRenderer.lightTexture(), Minecraft.getInstance().level, this.owner.getOnPos());
 
         float opacity = WakesConfig.APPEARANCE.wakeOpacity.get().floatValue() * 0.9f;
         int res = WakeHandler.resolution.res;
