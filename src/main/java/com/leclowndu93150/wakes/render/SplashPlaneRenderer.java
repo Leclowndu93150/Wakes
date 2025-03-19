@@ -1,10 +1,10 @@
 package com.leclowndu93150.wakes.render;
 
+
 import com.leclowndu93150.wakes.config.WakesConfig;
 import com.leclowndu93150.wakes.config.enums.Resolution;
 import com.leclowndu93150.wakes.duck.ProducesWake;
 import com.leclowndu93150.wakes.particle.custom.SplashPlaneParticle;
-import com.leclowndu93150.wakes.render.enums.RenderType;
 import com.leclowndu93150.wakes.simulation.WakeHandler;
 import com.leclowndu93150.wakes.utils.*;
 import com.mojang.blaze3d.platform.GlConst;
@@ -15,27 +15,24 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
+
 import com.mojang.math.Axis;
 import net.minecraft.client.renderer.CoreShaders;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.bus.api.EventPriority;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
-import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.api.distmarker.Dist;
 import org.joml.Matrix4f;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@OnlyIn(Dist.CLIENT)
+@EventBusSubscriber(bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
 public class SplashPlaneRenderer {
 
     private static ArrayList<Vector2D> points;
@@ -55,17 +52,8 @@ public class SplashPlaneRenderer {
 
     private static final double SQRT_8 = Math.sqrt(8);
 
-    public static void init() {
-        NeoForge.EVENT_BUS.register(SplashPlaneRenderer.class);
-    }
-
-    public static void setup(){
-        distributePoints();
-        generateMesh();
-    }
-
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    public static void onRenderLevel(RenderLevelStageEvent event) {
+    public static void onRenderLevelStage(RenderLevelStageEvent event) {
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) {
             return;
         }
@@ -87,7 +75,7 @@ public class SplashPlaneRenderer {
         if (WakesConfig.GENERAL.disableMod.get() || !WakesUtils.getEffectRuleFromSource(entity).renderPlanes) {
             return;
         }
-        RenderSystem.setShader(RenderType.getProgram());
+        RenderSystem.setShader(CoreShaders.POSITION_TEX_COLOR);
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         RenderSystem.enableBlend();
 
@@ -107,10 +95,8 @@ public class SplashPlaneRenderer {
     }
 
     private static void renderSurface(Matrix4f matrix) {
-        RenderSystem.setShader(CoreShaders.POSITION_TEX_COLOR);
-
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_TEX_COLOR);
-
+        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
+        int light = LightTexture.FULL_BRIGHT;
         for (int s = -1; s < 2; s++) {
             if (s == 0) continue;
             for (int i = 0; i < vertices.size(); i++) {
@@ -121,12 +107,11 @@ public class SplashPlaneRenderer {
                                 (float) (vertex.z * WakesConfig.APPEARANCE.splashPlaneHeight.get()),
                                 (float) (vertex.y * WakesConfig.APPEARANCE.splashPlaneDepth.get()))
                         .setUv((float) (vertex.x), (float) (vertex.y))
-                        .setColor(1.0f, 1.0f, 1.0f, 1.0f);
+                        .setColor(1f, 1f, 1f, 1f)
+                        .setNormal((float) normal.x, (float) normal.y, (float) normal.z);
             }
         }
 
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
         RenderSystem.disableCull();
         RenderSystem.enableDepthTest();
         BufferUploader.drawWithShader(buffer.buildOrThrow());
@@ -183,5 +168,10 @@ public class SplashPlaneRenderer {
                 normals.add(normal(x, y));
             }
         }
+    }
+
+    public static void initSplashPlane() {
+        distributePoints();
+        generateMesh();
     }
 }

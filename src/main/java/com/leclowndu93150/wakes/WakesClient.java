@@ -24,13 +24,12 @@ public class WakesClient {
 	public WakesClient(IEventBus modEventBus, ModContainer modContainer) {
 		modContainer.registerConfig(ModConfig.Type.CLIENT, WakesConfig.CLIENT_SPEC, MOD_ID + "-client.toml");
 		ModParticles.register(modEventBus);
-		SplashPlaneRenderer.init();
 		modEventBus.addListener(ModParticles::registerParticleFactories);
 		modEventBus.addListener(this::onClientSetup);
 	}
 
 	private void onClientSetup(FMLClientSetupEvent event) {
-		SplashPlaneRenderer.setup();
+		SplashPlaneRenderer.initSplashPlane();
 	}
 
 
