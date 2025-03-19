@@ -178,7 +178,7 @@ public class Brick {
                 if (node != null) {
                     fluidColor = BiomeColors.getAverageWaterColor(world, node.blockPos());
 
-                    lightCol = WakesUtils.getLightColor(Minecraft.getInstance().gameRenderer.lightTexture(), Minecraft.getInstance().level, node.blockPos());
+                    lightCol = WakesUtils.getLightColor(Minecraft.getInstance().level, node.blockPos());
 
                     opacity = (float) ((-Math.pow(node.t, 2) + 1) * WakesConfig.APPEARANCE.wakeOpacity.get());
                 }

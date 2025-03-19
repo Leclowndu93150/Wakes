@@ -7,6 +7,7 @@ import com.leclowndu93150.wakes.particle.custom.SplashPlaneParticle;
 import com.leclowndu93150.wakes.render.enums.RenderType;
 import com.leclowndu93150.wakes.simulation.WakeHandler;
 import com.leclowndu93150.wakes.utils.*;
+import com.mojang.blaze3d.platform.GlConst;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
@@ -99,7 +100,7 @@ public class SplashPlaneRenderer {
         matrices.scale(scalar, scalar, scalar);
         Matrix4f matrix = matrices.last().pose();
 
-        wakeTextures.get(WakeHandler.resolution).loadTexture(splashPlane.imgPtr);
+        wakeTextures.get(WakeHandler.resolution).loadTexture(splashPlane.imgPtr, GlConst.GL_RGBA);
         renderSurface(matrix);
 
         matrices.popPose();

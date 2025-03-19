@@ -43,14 +43,11 @@ public class WakesUtils {
         }
     }
 
-    public static int getLightColor(LightTexture lightmapTextureManager, Level world, BlockPos blockPos) {
+    public static int getLightColor(Level world, BlockPos blockPos) {
         int lightCoordinate = LevelRenderer.getLightColor(world, blockPos);
         int x = LightTexture.block(lightCoordinate);
         int y = LightTexture.sky(lightCoordinate);
-        lightmapTextureManager.target.bindRead();
-        int out = 0;
-        GlStateManager._readPixels(x, y, 16, 16, GlConst.GL_BGR, GlConst.GL_UNSIGNED_INT, out);
-        return out;
+        return LightmapWrapper.readPixel(x, y);
     }
 
     public static void spawnPaddleSplashCloudParticle(Level world, Boat boat) {

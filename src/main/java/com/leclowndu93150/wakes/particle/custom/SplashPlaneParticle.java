@@ -129,7 +129,7 @@ public class SplashPlaneParticle extends Particle {
     public void populatePixels() {
         int fluidColor = BiomeColors.getAverageWaterColor(level, this.owner.blockPosition());
 
-        int lightCol = WakesUtils.getLightColor(Minecraft.getInstance().gameRenderer.lightTexture(), Minecraft.getInstance().level, this.owner.getOnPos());
+        int lightCol = WakesUtils.getLightColor(Minecraft.getInstance().level, this.owner.getOnPos());
 
         float opacity = WakesConfig.APPEARANCE.wakeOpacity.get().floatValue() * 0.9f;
         int res = WakeHandler.resolution.res;
