@@ -10,7 +10,7 @@ import net.minecraft.client.renderer.ShaderInstance;
 public enum RenderType {
     AUTO(null),
     GENERAL(GameRenderer::getPositionColorTexLightmapShader),
-    CUSTOM(() -> WakesClient.TRANSLUCENT_NO_LIGHT_DIRECTION_PROGRAM),
+    CUSTOM(GameRenderer::getPositionTexColorShader),
     SOLID(GameRenderer::getRendertypeSolidShader),
     TRANSLUCENT(GameRenderer::getRendertypeTranslucentShader),
     CUTOUT(GameRenderer::getRendertypeCutoutShader),

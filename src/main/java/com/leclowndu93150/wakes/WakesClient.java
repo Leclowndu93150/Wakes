@@ -24,8 +24,6 @@ import java.util.concurrent.CompletableFuture;
 @Mod(WakesClient.MOD_ID)
 public class WakesClient {
 
-	public static ShaderInstance TRANSLUCENT_NO_LIGHT_DIRECTION_PROGRAM;
-	public static ShaderInstance POSITION_TEXTURE_HSV;
 	public static final String MOD_ID = "wakes";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 	public static boolean areShadersEnabled = false;
@@ -35,40 +33,11 @@ public class WakesClient {
 		ModParticles.register(modEventBus);
 		SplashPlaneRenderer.init();
 		modEventBus.addListener(ModParticles::registerParticleFactories);
-		modEventBus.addListener(this::onResourceReload);
 		modEventBus.addListener(this::onClientSetup);
 	}
 
 	private void onClientSetup(FMLClientSetupEvent event) {
 		SplashPlaneRenderer.setup();
-	}
-
-	private void onResourceReload(RegisterClientReloadListenersEvent event) {
-		event.registerReloadListener((barrier, manager, preparationsProfiler, reloadProfiler, backgroundExecutor, gameExecutor) -> CompletableFuture.supplyAsync(() -> {
-            preparationsProfiler.startTick();
-            preparationsProfiler.push("wakes_shader_preparation");
-            // Do any preparation work here if needed
-            preparationsProfiler.pop();
-            preparationsProfiler.endTick();
-            return null;
-        }, backgroundExecutor).thenCompose(barrier::wait).thenAcceptAsync(unused -> {
-            reloadProfiler.startTick();
-            reloadProfiler.push("wakes_shader_loading");
-            loadShaders(manager);
-            reloadProfiler.pop();
-            reloadProfiler.endTick();
-        }, gameExecutor));
-	}
-
-	public static void loadShaders(ResourceProvider provider) {
-		try {
-			TRANSLUCENT_NO_LIGHT_DIRECTION_PROGRAM = new ShaderInstance(provider,
-					ResourceLocation.fromNamespaceAndPath(MOD_ID, "translucent_no_light_direction"), DefaultVertexFormat.NEW_ENTITY);
-			POSITION_TEXTURE_HSV = new ShaderInstance(provider,
-					ResourceLocation.fromNamespaceAndPath(MOD_ID, "position_tex_hsv"), DefaultVertexFormat.POSITION_TEX_COLOR);
-		} catch (IOException e) {
-			LOGGER.error("Failed to load shaders", e);
-		}
 	}
 
 	public static boolean areShadersEnabled() {
