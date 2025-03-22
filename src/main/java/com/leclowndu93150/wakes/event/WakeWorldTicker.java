@@ -6,18 +6,19 @@ import com.leclowndu93150.wakes.debug.WakesDebugInfo;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent;
-import net.neoforged.neoforge.event.tick.LevelTickEvent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
-@EventBusSubscriber(value = Dist.CLIENT, bus = EventBusSubscriber.Bus.GAME)
+@Mod.EventBusSubscriber(value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class WakeWorldTicker {
 
     @SubscribeEvent
-    public static void onLevelTick(LevelTickEvent.Post event) {
-        if (event.getLevel() instanceof ClientLevel clientLevel) {
+    public static void onLevelTick(TickEvent.LevelTickEvent event) {
+        if(event.phase != TickEvent.Phase.END) return;
+        if (event.level instanceof ClientLevel clientLevel) {
             WakesClient.areShadersEnabled = WakesClient.areShadersEnabled();
             WakesDebugInfo.reset();
             WakeHandler.getInstance().ifPresent(WakeHandler::tick);

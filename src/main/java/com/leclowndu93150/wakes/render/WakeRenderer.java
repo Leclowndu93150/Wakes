@@ -14,19 +14,17 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.minecraft.client.Camera;
-import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RenderLevelStageEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 import java.util.*;
 
-@EventBusSubscriber(value = Dist.CLIENT, bus = EventBusSubscriber.Bus.GAME)
+@Mod.EventBusSubscriber(value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class WakeRenderer {
     public static Map<Resolution, WakeTexture> wakeTextures = null;
 
@@ -81,25 +79,26 @@ public class WakeRenderer {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
 
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        BufferBuilder buffer = Tesselator.getInstance().getBuilder();
+        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
 
         Vector3f pos = brick.pos.add(camera.getPosition().reverse()).toVector3f().add(0, WakeNode.WATER_OFFSET, 0);
 
-        buffer.addVertex(matrix, pos.x, pos.y, pos.z)
-                .setColor(1f, 1f, 1f, 1f)
-                .setUv(0, 0);
-        buffer.addVertex(matrix, pos.x, pos.y, pos.z + brick.dim)
-                .setColor(1f, 1f, 1f, 1f)
-                .setUv(0, 1);
-        buffer.addVertex(matrix, pos.x + brick.dim, pos.y, pos.z + brick.dim)
-                .setColor(1f, 1f, 1f, 1f)
-                .setUv(1, 1);
-        buffer.addVertex(matrix, pos.x + brick.dim, pos.y, pos.z)
-                .setColor(1f, 1f, 1f, 1f)
-                .setUv(1, 0);
+        buffer.vertex(matrix, pos.x, pos.y, pos.z)
+                .color(1f, 1f, 1f, 1f)
+                .uv(0, 0).endVertex();
+        buffer.vertex(matrix, pos.x, pos.y, pos.z + brick.dim)
+                .color(1f, 1f, 1f, 1f)
+                .uv(0, 1).endVertex();
+        buffer.vertex(matrix, pos.x + brick.dim, pos.y, pos.z + brick.dim)
+                .color(1f, 1f, 1f, 1f)
+                .uv(1, 1).endVertex();
+        buffer.vertex(matrix, pos.x + brick.dim, pos.y, pos.z)
+                .color(1f, 1f, 1f, 1f)
+                .uv(1, 0).endVertex();
 
         RenderSystem.disableCull();
-        BufferUploader.drawWithShader(buffer.build());
+        BufferUploader.drawWithShader(buffer.end());
         RenderSystem.enableCull();
     }
 }

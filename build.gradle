@@ -2,7 +2,7 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'idea'
-    id 'net.neoforged.moddev' version '2.0.78'
+    id 'net.neoforged.moddev.legacyforge' version '2.+'
 }
 
 version = mod_version
@@ -16,14 +16,14 @@ repositories {
 }
 
 base {
-    archivesName = mod_id+"-1.21.1-NeoForge"
+    archivesName = mod_id+"-1.20.1-Forge"
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
-neoForge {
+legacyForge {
     // Specify the version of NeoForge to use.
-    version = project.neo_version
+    version = "1.20.1-47.3.0"
 
     parchment {
         mappingsVersion = project.parchment_mappings_version
@@ -100,10 +100,25 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
 
-    compileOnlyApi "curse.maven:irisshaders-455508:6213632"
+    compileOnlyApi "curse.maven:oculus-581495:6020952"
     //implementation(files("libs/satin-1.0.0.jar"))
-    implementation "curse.maven:sodium-394468:6211307"
+    compileOnlyApi "curse.maven:embeddium-908741:5681725"
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.4.1"))
+    implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.4.1"))
 }
+
+mixin {
+    add sourceSets.main, "${mod_id}.refmap.json"
+
+    config "${mod_id}.mixins.json"
+}
+
+jar {
+    manifest.attributes([
+            "MixinConfigs": "particular.mixins.json"
+    ])
+}
+
 
 // This block of code expands all declared replace properties in the specified resource targets.
 // A missing property will result in an error. Properties are expanded using ${} Groovy notation.
@@ -129,7 +144,7 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
 // this works with both building through Gradle and the IDE.
 sourceSets.main.resources.srcDir generateModMetadata
 // To avoid having to run "generateModMetadata" manually, make it run on every project reload
-neoForge.ideSyncTask generateModMetadata
+legacyForge.ideSyncTask generateModMetadata
 
 // Example configuration to allow publishing using the maven-publish plugin
 publishing {

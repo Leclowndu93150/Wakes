@@ -15,18 +15,17 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.bus.api.EventPriority;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
-import net.neoforged.neoforge.common.NeoForge;
+
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.RenderLevelStageEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.joml.Matrix4f;
 
 import java.util.ArrayList;
@@ -54,7 +53,7 @@ public class SplashPlaneRenderer {
     private static final double SQRT_8 = Math.sqrt(8);
 
     public static void init() {
-        NeoForge.EVENT_BUS.register(SplashPlaneRenderer.class);
+        MinecraftForge.EVENT_BUS.register(SplashPlaneRenderer.class);
     }
 
     public static void setup(){
@@ -107,19 +106,20 @@ public class SplashPlaneRenderer {
     private static void renderSurface(Matrix4f matrix) {
         RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
 
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_TEX_COLOR);
+        BufferBuilder buffer = Tesselator.getInstance().getBuilder();
+        buffer.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_TEX_COLOR);
 
         for (int s = -1; s < 2; s++) {
             if (s == 0) continue;
             for (int i = 0; i < vertices.size(); i++) {
                 Vec3 vertex = vertices.get(i);
                 Vec3 normal = normals.get(i);
-                buffer.addVertex(matrix,
+                buffer.vertex(matrix,
                                 (float) (s * (vertex.x * WakesConfig.APPEARANCE.splashPlaneWidth.get() + WakesConfig.APPEARANCE.splashPlaneGap.get())),
                                 (float) (vertex.z * WakesConfig.APPEARANCE.splashPlaneHeight.get()),
                                 (float) (vertex.y * WakesConfig.APPEARANCE.splashPlaneDepth.get()))
-                        .setUv((float) (vertex.x), (float) (vertex.y))
-                        .setColor(1.0f, 1.0f, 1.0f, 1.0f);
+                        .uv((float) (vertex.x), (float) (vertex.y))
+                        .color(1.0f, 1.0f, 1.0f, 1.0f).endVertex();
             }
         }
 
@@ -127,7 +127,7 @@ public class SplashPlaneRenderer {
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableCull();
         RenderSystem.enableDepthTest();
-        BufferUploader.drawWithShader(buffer.buildOrThrow());
+        BufferUploader.drawWithShader(buffer.end());
         RenderSystem.enableCull();
     }
 
@@ -150,7 +150,7 @@ public class SplashPlaneRenderer {
     }
 
     private static void distributePoints() {
-        int res = WakesConfig.APPEARANCE.splashPlaneResolution.getAsInt();
+        int res = WakesConfig.APPEARANCE.splashPlaneResolution.get();
         points = new ArrayList<>();
 
         for (float i = 0; i < res; i++) {

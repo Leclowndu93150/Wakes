@@ -22,12 +22,12 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
-import org.jetbrains.annotations.Nullable;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.RenderLevelStageEvent;
 import org.lwjgl.system.MemoryUtil;
 
+import javax.annotation.Nullable;
 import java.util.Random;
 
 public class SplashPlaneParticle extends Particle {
@@ -167,7 +167,7 @@ public class SplashPlaneParticle extends Particle {
 
     public void translateMatrix(RenderLevelStageEvent context, PoseStack matrices) {
         Vec3 cameraPos = context.getCamera().getPosition();
-        float tickDelta = context.getPartialTick().getGameTimeDeltaPartialTick(true);
+        float tickDelta = context.getPartialTick();
         float x = (float) (Mth.lerp(tickDelta, this.xo, this.x) - cameraPos.x());
         float y = (float) (Mth.lerp(tickDelta, this.yo, this.y) - cameraPos.y());
         float z = (float) (Mth.lerp(tickDelta, this.zo, this.z) - cameraPos.z());

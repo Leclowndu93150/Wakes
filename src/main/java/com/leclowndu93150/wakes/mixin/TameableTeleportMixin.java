@@ -1,3 +1,4 @@
+/*
 package com.leclowndu93150.wakes.mixin;
 
 import com.leclowndu93150.wakes.duck.ProducesWake;
@@ -17,3 +18,4 @@ public class TameableTeleportMixin {
         }
     }
 }
+ */

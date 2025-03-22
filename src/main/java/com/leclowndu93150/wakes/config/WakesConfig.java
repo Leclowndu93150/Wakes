@@ -5,18 +5,19 @@ import com.leclowndu93150.wakes.config.enums.Resolution;
 import com.leclowndu93150.wakes.render.enums.RenderType;
 import com.leclowndu93150.wakes.render.WakeColor;
 import com.google.common.collect.Lists;
-import net.neoforged.neoforge.common.ModConfigSpec;
+import net.minecraftforge.common.ForgeConfigSpec;
+
 import java.util.List;
 
 public class WakesConfig {
-    public static final ModConfigSpec CLIENT_SPEC;
+    public static final ForgeConfigSpec CLIENT_SPEC;
 
     public static final General GENERAL;
     public static final Appearance APPEARANCE;
     public static final Debug DEBUG;
 
     static {
-        ModConfigSpec.Builder clientBuilder = new ModConfigSpec.Builder();
+        ForgeConfigSpec.Builder clientBuilder = new ForgeConfigSpec.Builder();
 
         GENERAL = new General(clientBuilder);
         APPEARANCE = new Appearance(clientBuilder);
@@ -26,22 +27,22 @@ public class WakesConfig {
     }
 
     public static class General {
-        public final ModConfigSpec.BooleanValue disableMod;
-        public final ModConfigSpec.BooleanValue pickBoat;
+        public final ForgeConfigSpec.BooleanValue disableMod;
+        public final ForgeConfigSpec.BooleanValue pickBoat;
 
-        public final ModConfigSpec.EnumValue<EffectSpawningRule> boatSpawning;
-        public final ModConfigSpec.EnumValue<EffectSpawningRule> playerSpawning;
-        public final ModConfigSpec.EnumValue<EffectSpawningRule> otherPlayersSpawning;
-        public final ModConfigSpec.EnumValue<EffectSpawningRule> mobSpawning;
-        public final ModConfigSpec.EnumValue<EffectSpawningRule> itemSpawning;
+        public final ForgeConfigSpec.EnumValue<EffectSpawningRule> boatSpawning;
+        public final ForgeConfigSpec.EnumValue<EffectSpawningRule> playerSpawning;
+        public final ForgeConfigSpec.EnumValue<EffectSpawningRule> otherPlayersSpawning;
+        public final ForgeConfigSpec.EnumValue<EffectSpawningRule> mobSpawning;
+        public final ForgeConfigSpec.EnumValue<EffectSpawningRule> itemSpawning;
 
-        public final ModConfigSpec.DoubleValue wavePropagationFactor;
-        public final ModConfigSpec.DoubleValue waveDecayFactor;
-        public final ModConfigSpec.IntValue initialStrength;
-        public final ModConfigSpec.IntValue paddleStrength;
-        public final ModConfigSpec.IntValue splashStrength;
+        public final ForgeConfigSpec.DoubleValue wavePropagationFactor;
+        public final ForgeConfigSpec.DoubleValue waveDecayFactor;
+        public final ForgeConfigSpec.IntValue initialStrength;
+        public final ForgeConfigSpec.IntValue paddleStrength;
+        public final ForgeConfigSpec.IntValue splashStrength;
 
-        public General(ModConfigSpec.Builder builder) {
+        public General(ForgeConfigSpec.Builder builder) {
             disableMod = builder
                     .comment("Disable the mod functionality")
                     .define("disableMod", false);
@@ -90,26 +91,26 @@ public class WakesConfig {
     }
 
     public static class Appearance {
-        public final ModConfigSpec.EnumValue<Resolution> wakeResolution;
-        public final ModConfigSpec.DoubleValue wakeOpacity;
-        public final ModConfigSpec.DoubleValue blendStrength;
-        public final ModConfigSpec.BooleanValue firstPersonSplashPlane;
-        public final ModConfigSpec.BooleanValue spawnParticles;
-        public final ModConfigSpec.DoubleValue shaderLightPassthrough;
+        public final ForgeConfigSpec.EnumValue<Resolution> wakeResolution;
+        public final ForgeConfigSpec.DoubleValue wakeOpacity;
+        public final ForgeConfigSpec.DoubleValue blendStrength;
+        public final ForgeConfigSpec.BooleanValue firstPersonSplashPlane;
+        public final ForgeConfigSpec.BooleanValue spawnParticles;
+        public final ForgeConfigSpec.DoubleValue shaderLightPassthrough;
 
-        public final ModConfigSpec.DoubleValue splashPlaneWidth;
-        public final ModConfigSpec.DoubleValue splashPlaneHeight;
-        public final ModConfigSpec.DoubleValue splashPlaneDepth;
-        public final ModConfigSpec.DoubleValue splashPlaneOffset;
-        public final ModConfigSpec.DoubleValue splashPlaneGap;
-        public final ModConfigSpec.IntValue splashPlaneResolution;
-        public final ModConfigSpec.DoubleValue maxSplashPlaneVelocity;
-        public final ModConfigSpec.DoubleValue splashPlaneScale;
+        public final ForgeConfigSpec.DoubleValue splashPlaneWidth;
+        public final ForgeConfigSpec.DoubleValue splashPlaneHeight;
+        public final ForgeConfigSpec.DoubleValue splashPlaneDepth;
+        public final ForgeConfigSpec.DoubleValue splashPlaneOffset;
+        public final ForgeConfigSpec.DoubleValue splashPlaneGap;
+        public final ForgeConfigSpec.IntValue splashPlaneResolution;
+        public final ForgeConfigSpec.DoubleValue maxSplashPlaneVelocity;
+        public final ForgeConfigSpec.DoubleValue splashPlaneScale;
 
-        public final ModConfigSpec.ConfigValue<List<? extends Double>> wakeColorIntervals;
-        public final ModConfigSpec.ConfigValue<List<? extends String>> wakeColors;
+        public final ForgeConfigSpec.ConfigValue<List<? extends Double>> wakeColorIntervals;
+        public final ForgeConfigSpec.ConfigValue<List<? extends String>> wakeColors;
 
-        public Appearance(ModConfigSpec.Builder builder) {
+        public Appearance(ForgeConfigSpec.Builder builder) {
             wakeResolution = builder
                     .defineEnum("wakeResolution", Resolution.SIXTEEN);
 
@@ -171,14 +172,14 @@ public class WakesConfig {
     }
 
     public static class Debug {
-        public final ModConfigSpec.BooleanValue debugColors;
-        public final ModConfigSpec.BooleanValue drawDebugBoxes;
-        public final ModConfigSpec.BooleanValue showDebugInfo;
-        public final ModConfigSpec.IntValue floodFillDistance;
-        public final ModConfigSpec.IntValue floodFillTickDelay;
-        public final ModConfigSpec.EnumValue<RenderType> renderType;
+        public final ForgeConfigSpec.BooleanValue debugColors;
+        public final ForgeConfigSpec.BooleanValue drawDebugBoxes;
+        public final ForgeConfigSpec.BooleanValue showDebugInfo;
+        public final ForgeConfigSpec.IntValue floodFillDistance;
+        public final ForgeConfigSpec.IntValue floodFillTickDelay;
+        public final ForgeConfigSpec.EnumValue<RenderType> renderType;
 
-        public Debug(ModConfigSpec.Builder builder) {
+        public Debug(ForgeConfigSpec.Builder builder) {
             debugColors = builder
                     .define("debugColors", false);
 

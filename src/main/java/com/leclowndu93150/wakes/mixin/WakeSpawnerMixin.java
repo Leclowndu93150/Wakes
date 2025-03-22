@@ -32,8 +32,6 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
 
 	@Shadow public abstract double getZ();
 
-	@Shadow public abstract boolean isInLiquid();
-
 	@Shadow public abstract boolean isInWater();
 
 	@Unique private boolean onFluidSurface = false;

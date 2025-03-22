@@ -5,19 +5,16 @@ import com.leclowndu93150.wakes.particle.custom.SplashCloudParticle;
 import com.leclowndu93150.wakes.particle.custom.SplashPlaneParticle;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
-import net.neoforged.neoforge.registries.DeferredRegister;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraft.core.registries.Registries;
+import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.registries.DeferredRegister;
+
 import java.util.function.Supplier;
 
 public class ModParticles {
     public static final DeferredRegister<ParticleType<?>> PARTICLE_TYPES =
-            DeferredRegister.create(BuiltInRegistries.PARTICLE_TYPE, WakesClient.MOD_ID);
+            DeferredRegister.create(Registries.PARTICLE_TYPE, WakesClient.MOD_ID);
 
     public static final Supplier<WithOwnerParticleType> SPLASH_PLANE = PARTICLE_TYPES.register(
             "splash_plane", () -> new WithOwnerParticleType(true));

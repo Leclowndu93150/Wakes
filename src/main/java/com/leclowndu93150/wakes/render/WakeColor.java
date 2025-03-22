@@ -67,7 +67,7 @@ public class WakeColor {
     }
 
     public WakeColor blend(WakeColor tint, int lightColor, float opacity) {
-        double srcA = Math.pow(this.a / 255f, WakesConfig.APPEARANCE.blendStrength.getAsDouble() * 10);
+        double srcA = Math.pow(this.a / 255f, WakesConfig.APPEARANCE.blendStrength.get() * 10);
         // Pow to make tint color have a larger influence
         
         int r = (int) ((this.r) * (srcA) + (tint.r) * (1 - srcA));

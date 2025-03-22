@@ -6,7 +6,6 @@
   "refmap": "wakes.refmap.json",
   "mixins": [
     "LilyPadFallMixin",
-    "TameableTeleportMixin",
     "WakeSpawnerMixin"
   ],
   "client": [
