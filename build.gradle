@@ -100,11 +100,10 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
 
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
     compileOnlyApi "curse.maven:oculus-581495:6020952"
     //implementation(files("libs/satin-1.0.0.jar"))
     compileOnlyApi "curse.maven:embeddium-908741:5681725"
-    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.4.1"))
-    implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.4.1"))
 }
 
 mixin {
@@ -115,7 +114,7 @@ mixin {
 
 jar {
     manifest.attributes([
-            "MixinConfigs": "particular.mixins.json"
+            "MixinConfigs": "wakes.mixins.json"
     ])
 }
 
