@@ -85,17 +85,17 @@ public class WakeRenderer {
         Vector3f pos = brick.pos.add(camera.getPosition().reverse()).toVector3f().add(0, WakeNode.WATER_OFFSET, 0);
 
         buffer.vertex(matrix, pos.x, pos.y, pos.z)
-                .color(1f, 1f, 1f, 1f)
-                .uv(0, 0).endVertex();
+                .uv(0, 0)
+                .color(1f, 1f, 1f, 1f).endVertex();
         buffer.vertex(matrix, pos.x, pos.y, pos.z + brick.dim)
-                .color(1f, 1f, 1f, 1f)
-                .uv(0, 1).endVertex();
+                .uv(0, 1)
+                .color(1f, 1f, 1f, 1f).endVertex();
         buffer.vertex(matrix, pos.x + brick.dim, pos.y, pos.z + brick.dim)
-                .color(1f, 1f, 1f, 1f)
-                .uv(1, 1).endVertex();
+                .uv(1, 1)
+                .color(1f, 1f, 1f, 1f).endVertex();
         buffer.vertex(matrix, pos.x + brick.dim, pos.y, pos.z)
-                .color(1f, 1f, 1f, 1f)
-                .uv(1, 0).endVertex();
+                .uv(1, 0)
+                .color(1f, 1f, 1f, 1f).endVertex();
 
         RenderSystem.disableCull();
         BufferUploader.drawWithShader(buffer.end());
