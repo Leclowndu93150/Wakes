@@ -1,12 +1,8 @@
 package com.leclowndu93150.wakes.particle;
 
 import com.leclowndu93150.wakes.WakesClient;
-import com.leclowndu93150.wakes.particle.custom.SplashCloudParticle;
-import com.leclowndu93150.wakes.particle.custom.SplashPlaneParticle;
 import net.minecraft.core.particles.ParticleType;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 
@@ -24,10 +20,5 @@ public class ModParticles {
 
     public static void register(IEventBus eventBus) {
         PARTICLE_TYPES.register(eventBus);
-    }
-
-    public static void registerParticleFactories(RegisterParticleProvidersEvent event) {
-        event.registerSpriteSet(SPLASH_PLANE.get(), SplashPlaneParticle.Factory::new);
-        event.registerSpriteSet(SPLASH_CLOUD.get(), SplashCloudParticle.Factory::new);
     }
 }

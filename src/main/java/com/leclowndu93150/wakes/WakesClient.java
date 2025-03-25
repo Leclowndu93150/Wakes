@@ -4,7 +4,6 @@ import com.leclowndu93150.wakes.config.WakesConfig;
 import com.leclowndu93150.wakes.particle.ModParticles;
 import com.leclowndu93150.wakes.render.SplashPlaneRenderer;
 import net.irisshaders.iris.api.v0.IrisApi;
-
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
@@ -24,15 +23,11 @@ public class WakesClient {
 
 	public WakesClient() {
 		IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-		ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, WakesConfig.CLIENT_SPEC, MOD_ID + "-client.toml");
+		if(FMLLoader.getDist().isClient()){
+			ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, WakesConfig.CLIENT_SPEC, MOD_ID + "-client.toml");
+			SplashPlaneRenderer.init();
+		}
 		ModParticles.register(modEventBus);
-		SplashPlaneRenderer.init();
-		modEventBus.addListener(ModParticles::registerParticleFactories);
-		modEventBus.addListener(this::onClientSetup);
-	}
-
-	private void onClientSetup(FMLClientSetupEvent event) {
-		SplashPlaneRenderer.setup();
 	}
 
 	public static boolean areShadersEnabled() {
