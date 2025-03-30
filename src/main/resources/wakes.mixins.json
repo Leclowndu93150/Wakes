@@ -5,11 +5,11 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "wakes.refmap.json",
   "mixins": [
-    "LilyPadFallMixin",
-    "WakeSpawnerMixin"
   ],
   "client": [
-    "DebugHudMixin"
+    "DebugHudMixin",
+    "LilyPadFallMixin",
+    "WakeSpawnerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

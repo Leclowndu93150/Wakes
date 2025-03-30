@@ -6,6 +6,7 @@ import com.leclowndu93150.wakes.debug.WakesDebugInfo;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -27,9 +28,8 @@ public class WakeWorldTicker {
 
     @SubscribeEvent
     public static void onPlayerChangeDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player) {
-            ServerLevel destination = player.serverLevel();
-            WakeHandler.init(destination);
+        if (event.getEntity() != null) {
+            WakeHandler.init(event.getEntity().level());
         }
     }
 }
