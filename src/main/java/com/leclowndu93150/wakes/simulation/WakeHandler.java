@@ -4,14 +4,17 @@ import com.leclowndu93150.wakes.config.WakesConfig;
 import com.leclowndu93150.wakes.config.enums.Resolution;
 import com.leclowndu93150.wakes.particle.custom.SplashPlaneParticle;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 
 public class WakeHandler {
-    private static WakeHandler INSTANCE;
+    private static final Map<ResourceKey<Level>, WakeHandler> INSTANCES = new HashMap<>();
     public Level world;
 
     private QuadTree[] trees;
@@ -21,7 +24,6 @@ public class WakeHandler {
     private ArrayList<SplashPlaneParticle> splashPlanes;
 
     public static Resolution resolution = WakesConfig.APPEARANCE.wakeResolution.get();
-
     public static boolean resolutionResetScheduled = false;
 
     private WakeHandler(Level world) {
@@ -38,21 +40,34 @@ public class WakeHandler {
     }
 
     public static Optional<WakeHandler> getInstance() {
-        if (INSTANCE == null) {
-            if (Minecraft.getInstance().level == null) {
-                return Optional.empty();
-            }
-            INSTANCE = new WakeHandler(Minecraft.getInstance().level);
+        if (Minecraft.getInstance().level == null) {
+            return Optional.empty();
         }
-        return Optional.of(INSTANCE);
+        ResourceKey<Level> dimension = Minecraft.getInstance().level.dimension();
+        return Optional.ofNullable(INSTANCES.get(dimension));
+    }
+
+    public static Optional<WakeHandler> getInstance(Level world) {
+        if (world == null) {
+            return Optional.empty();
+        }
+        ResourceKey<Level> dimension = world.dimension();
+        return Optional.ofNullable(INSTANCES.get(dimension));
     }
 
     public static void init(Level world) {
-        INSTANCE = new WakeHandler(world);
+        if (world != null) {
+            ResourceKey<Level> dimension = world.dimension();
+            INSTANCES.put(dimension, new WakeHandler(world));
+        }
     }
 
     public static void kill() {
-        INSTANCE = null;
+        INSTANCES.clear();
+    }
+
+    public static void killDimension(ResourceKey<Level> dimension) {
+        INSTANCES.remove(dimension);
     }
 
     public void tick() {
@@ -157,6 +172,15 @@ public class WakeHandler {
                 tree.prune();
             }
             toBeInserted[i].clear();
+        }
+    }
+
+    public void cleanupChunk(int minX, int minZ, int maxX, int maxZ) {
+        for (int i = 0; i < this.maxY - this.minY; i++) {
+            QuadTree tree = this.trees[i];
+            if (tree != null) {
+                tree.cleanupArea(minX, minZ, maxX, maxZ);
+            }
         }
     }
 }

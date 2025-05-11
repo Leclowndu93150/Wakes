@@ -231,6 +231,11 @@ public class WakeNode {
         }
 
         public static Set<WakeNode> thickNodeTrail(double fromX, double fromZ, double toX, double toZ, int y, float waveStrength, double velocity, float width) {
+            double distanceSq = (toX - fromX) * (toX - fromX) + (toZ - fromZ) * (toZ - fromZ);
+            if (distanceSq > 400) { // 20 blocks squared
+                return new HashSet<>();
+            }
+
             int res = WakeHandler.resolution.res;
             int x1 = (int) (fromX * res);
             int z1 = (int) (fromZ * res);
@@ -240,6 +245,11 @@ public class WakeNode {
 
             // TODO MAKE MORE EFFICIENT THICK LINE DRAWER
             float len = (float) Math.sqrt(Math.pow(z1 - z2, 2) + Math.pow(x2 - x1, 2));
+
+            if (len > 1000) { // Arbitrary limit for pixel operations
+                return new HashSet<>();
+            }
+
             float nx = (z1 - z2) / len;
             float nz = (x2 - x1) / len;
             ArrayList<Long> pixelsAffected = new ArrayList<>();

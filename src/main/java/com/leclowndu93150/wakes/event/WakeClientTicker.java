@@ -13,7 +13,7 @@ public class WakeClientTicker {
         Minecraft client = Minecraft.getInstance();
         if (client.level == null) {
             WakeHandler.kill();
-        } else if (WakeHandler.getInstance().isEmpty()) {
+        } else if (WakeHandler.getInstance(client.level).isEmpty()) {
             WakeHandler.init(client.level);
         }
     }

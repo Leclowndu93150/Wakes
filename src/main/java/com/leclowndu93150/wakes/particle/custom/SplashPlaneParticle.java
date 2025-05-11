@@ -48,7 +48,7 @@ public class SplashPlaneParticle extends Particle {
     protected SplashPlaneParticle(ClientLevel world, double x, double y, double z) {
         super(world, x, y, z);
         initTexture(WakeHandler.resolution.res);
-        WakeHandler.getInstance().ifPresent(wakeHandler -> wakeHandler.registerSplashPlane(this));
+        WakeHandler.getInstance(world).ifPresent(wakeHandler -> wakeHandler.registerSplashPlane(this));
     }
 
     @Override

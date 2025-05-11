@@ -35,7 +35,7 @@ import net.minecraft.world.phys.Vec3;
 public class WakesUtils {
 
     public static void placeFallSplash(Entity entity) {
-        WakeHandler wakeHandler = WakeHandler.getInstance().orElse(null);
+        WakeHandler wakeHandler = WakeHandler.getInstance(entity.level()).orElse(null);
         if (wakeHandler == null) return;
 
         for (WakeNode node : WakeNode.Factory.splashNodes(entity, (int) Math.floor(((ProducesWake) entity).wakes$wakeHeight()))) {
@@ -73,7 +73,7 @@ public class WakesUtils {
     }
 
     public static void placeWakeTrail(Entity entity) {
-        WakeHandler wakeHandler = WakeHandler.getInstance().orElse(null);
+        WakeHandler wakeHandler = WakeHandler.getInstance(entity.level()).orElse(null);
         if (wakeHandler == null) return;
 
         ProducesWake producer = (ProducesWake) entity;
