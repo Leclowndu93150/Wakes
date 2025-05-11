@@ -2,8 +2,6 @@ package com.leclowndu93150.wakes.render.enums;
 
 import com.leclowndu93150.wakes.WakesClient;
 import com.leclowndu93150.wakes.config.WakesConfig;
-import net.minecraft.client.renderer.CoreShaders;
-import net.minecraft.client.renderer.ShaderProgram;
 
 public enum RenderType {
     AUTO(null),
