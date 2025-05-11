@@ -231,6 +231,12 @@ public class WakeNode {
         }
 
         public static Set<WakeNode> thickNodeTrail(double fromX, double fromZ, double toX, double toZ, int y, float waveStrength, double velocity, float width) {
+            // Skip wake generation for very large distances (likely teleports)
+            double distanceSq = (toX - fromX) * (toX - fromX) + (toZ - fromZ) * (toZ - fromZ);
+            if (distanceSq > 400) { // 20 blocks squared
+                return new HashSet<>();
+            }
+
             int res = WakeHandler.resolution.res;
             int x1 = (int) (fromX * res);
             int z1 = (int) (fromZ * res);
@@ -238,13 +244,18 @@ public class WakeNode {
             int z2 = (int) (toZ * res);
             int w = (int) (0.8 * width * res / 2);
 
-            // TODO MAKE MORE EFFICIENT THICK LINE DRAWER
+            // Limit line length to prevent performance issues
             float len = (float) Math.sqrt(Math.pow(z1 - z2, 2) + Math.pow(x2 - x1, 2));
+            if (len > 1000) { // Arbitrary limit for pixel operations
+                return new HashSet<>();
+            }
+
             float nx = (z1 - z2) / len;
             float nz = (x2 - x1) / len;
             ArrayList<Long> pixelsAffected = new ArrayList<>();
             for (int i = -w; i < w; i++) {
-                WakesUtils.bresenhamLine((int) (x1 + nx * i), (int) (z1 + nz * i), (int) (x2 + nx * i), (int) (z2 + nz * i), pixelsAffected);
+                WakesUtils.bresenhamLine((int) (x1 + nx * i), (int) (z1 + nz * i),
+                        (int) (x2 + nx * i), (int) (z2 + nz * i), pixelsAffected);
             }
             return pixelsToNodes(pixelsAffected, y, waveStrength, velocity);
         }

@@ -98,6 +98,42 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
 //		System.out.printf("%s wants to teleport\n", this);
 //	}
 
+	@Inject(at = @At("HEAD"), method = "teleportTo(DDD)V")
+	private void onTeleportTo(double x, double y, double z, CallbackInfo ci) {
+		Vec3 currentPos = this.position;
+		Vec3 newPos = new Vec3(x, y, z);
+		double distanceSq = currentPos.distanceToSqr(newPos);
+
+		if (distanceSq > 400) {
+			this.wakes$setRecentlyTeleported(true);
+			this.wakes$setPrevPos(null);
+		}
+	}
+
+	@Inject(at = @At("HEAD"), method = "moveTo(DDDFF)V")
+	private void onMoveTo(double x, double y, double z, float yaw, float pitch, CallbackInfo ci) {
+		Vec3 currentPos = this.position;
+		Vec3 newPos = new Vec3(x, y, z);
+		if (currentPos.distanceToSqr(newPos) > 400) {
+			this.wakes$setRecentlyTeleported(true);
+			this.wakes$setPrevPos(null);
+		}
+	}
+
+	@Inject(at = @At("HEAD"), method = "setPos(DDD)V")
+	private void onSetPos(double x, double y, double z, CallbackInfo ci) {
+		if (this.position != null) {
+			Vec3 currentPos = this.position;
+			Vec3 newPos = new Vec3(x, y, z);
+			double distanceSq = currentPos.distanceToSqr(newPos);
+
+			if (distanceSq > 100) {
+				this.wakes$setRecentlyTeleported(true);
+				this.wakes$setPrevPos(null);
+			}
+		}
+	}
+
 	@Unique
 	private boolean onFluidSurface() {
 		double hitboxMaxY = this.getBoundingBox().maxY;

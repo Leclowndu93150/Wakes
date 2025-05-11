@@ -7,15 +7,16 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-@Mod.EventBusSubscriber(bus =  Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
+@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class WakeClientTicker {
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event) {
         Minecraft client = Minecraft.getInstance();
         if(event.phase != TickEvent.Phase.START) return;
+
         if (client.level == null) {
             WakeHandler.kill();
-        } else if (WakeHandler.getInstance().isEmpty()) {
+        } else if (WakeHandler.getInstance(client.level).isEmpty()) {
             WakeHandler.init(client.level);
         }
     }

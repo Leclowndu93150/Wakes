@@ -57,6 +57,27 @@ public class QuadTree {
         }
     }
 
+    public void cleanupArea(int minX, int minZ, int maxX, int maxZ) {
+        if (!this.bounds.intersectsArea(minX, minZ, maxX, maxZ)) {
+            return;
+        }
+
+        if (hasLeaf() && brick != null) {
+            if (bounds.x >= minX && bounds.x + bounds.width <= maxX &&
+                    bounds.z >= minZ && bounds.z + bounds.width <= maxZ) {
+                brick.deallocTexture();
+                brick = null;
+            }
+            return;
+        }
+
+        if (children != null) {
+            for (var tree : children) {
+                tree.cleanupArea(minX, minZ, maxX, maxZ);
+            }
+        }
+    }
+
     public boolean tick(WakeHandler wakeHandler) {
         if (hasLeaf()) {
             return brick.tick(wakeHandler);
@@ -160,6 +181,11 @@ public class QuadTree {
                     this.x + this.width < other.x ||
                     this.z > other.z + other.width ||
                     this.z + this.width < other.z);
+        }
+
+        public boolean intersectsArea(int minX, int minZ, int maxX, int maxZ) {
+            return !(this.x > maxX || this.x + this.width < minX ||
+                    this.z > maxZ || this.z + this.width < minZ);
         }
 
         public boolean neighbors(DecentralizedBounds other) {

@@ -1,10 +1,12 @@
 package com.leclowndu93150.wakes;
 
+import com.leclowndu93150.wakes.network.NetworkHandler;
 import com.leclowndu93150.wakes.particle.ModParticles;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +22,11 @@ public class WakesClient {
 		IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 		ModParticles.register(modEventBus);
 		DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ClientSetup::init);
+		modEventBus.addListener(this::commonSetup);
+	}
+
+	private void commonSetup(final FMLCommonSetupEvent event) {
+		event.enqueueWork(NetworkHandler::init);
 	}
 
 	public static boolean areShadersEnabled() {
