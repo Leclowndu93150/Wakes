@@ -35,6 +35,9 @@ public class Brick {
     public int texRes;
     public boolean hasPopulatedPixels = false;
 
+    private boolean shouldDeallocate = false;
+    private int unusedTicks = 0;
+
     public Brick(int x, float y, int z, int width) {
         this.dim = width;
         this.capacity = dim * dim;
@@ -56,10 +59,26 @@ public class Brick {
     }
 
     public void deallocTexture() {
-        MemoryUtil.nmemFree(imgPtr);
+        if (imgPtr != -1) {
+            MemoryUtil.nmemFree(imgPtr);
+            imgPtr = -1;
+        }
     }
 
+
     public boolean tick(WakeHandler wakeHandler) {
+        if (occupied == 0) {
+            unusedTicks++;
+            if (unusedTicks > 100 && imgPtr != -1) { // Deallocate after 5 seconds of no use
+                deallocTexture();
+                imgPtr = -1;
+                hasPopulatedPixels = false;
+            }
+            return false;
+        }
+
+        unusedTicks = 0;
+
         long tNode = System.nanoTime();
         for (int z = 0; z < dim; z++) {
             for (int x = 0; x < dim; x++) {
@@ -166,6 +185,10 @@ public class Brick {
     }
 
     public void populatePixels() {
+        if (imgPtr == -1) {
+            initTexture(WakeHandler.resolution.res);
+        }
+
         Level world = Minecraft.getInstance().level;
         for (int z = 0; z < dim; z++) {
             for (int x = 0; x < dim; x++) {
