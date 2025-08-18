@@ -10,6 +10,7 @@ import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.textures.TextureFormat;
+import net.neoforged.neoforge.client.blaze3d.validation.ValidationGpuTexture;
 
 public class WakeTexture {
     public int res;
@@ -36,8 +37,16 @@ public class WakeTexture {
         GlStateManager._pixelStore(GlConst.GL_UNPACK_ALIGNMENT, 4);
 
         int dim = resolutionScaling * WakeHandler.resolution.res;
-        GlStateManager._bindTexture(((GlTexture) texture).glId());
-        GlStateManager._texSubImage2D(GlConst.GL_TEXTURE_2D, 0,0,0,dim, dim, glFormat, GlConst.GL_UNSIGNED_BYTE, imgPtr);
+
+        GpuTexture actualTexture = texture;
+        if (texture instanceof ValidationGpuTexture) {
+            actualTexture = ((ValidationGpuTexture) texture).getRealTexture();
+        }
+
+        if (actualTexture instanceof GlTexture glTexture) {
+            GlStateManager._bindTexture(glTexture.glId());
+            GlStateManager._texSubImage2D(GlConst.GL_TEXTURE_2D, 0, 0, 0, dim, dim, glFormat, GlConst.GL_UNSIGNED_BYTE, imgPtr);
+        }
 
         //RenderSystem.setShaderTexture(0, texture);
         //RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR);

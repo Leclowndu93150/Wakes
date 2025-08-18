@@ -15,6 +15,7 @@ import com.mojang.blaze3d.vertex.*;
 
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.DynamicUniforms;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.world.entity.Entity;
@@ -96,7 +97,7 @@ public class SplashPlaneRenderer {
                                 (float) (vertex.z * WakesConfig.APPEARANCE.splashPlaneHeight.get()),
                                 (float) (vertex.y * WakesConfig.APPEARANCE.splashPlaneDepth.get()))
                         .setUv((float) (vertex.x), (float) (vertex.y))
-                        .setLight(LightTexture.FULL_BRIGHT)
+                        .setLight(light)
                         .setColor(1f, 1f, 1f, 1f)
                         .setNormal((float) normal.x, (float) normal.y, (float) normal.z);
             }
@@ -106,11 +107,22 @@ public class SplashPlaneRenderer {
 
         GpuBuffer buffer2 = DefaultVertexFormat.BLOCK.uploadImmediateVertexBuffer(built.vertexBuffer());
         GpuBuffer indices = RenderSystem.getSequentialBuffer(VertexFormat.Mode.TRIANGLES).getBuffer(built.drawState().indexCount());
+
+        var dynamicTransform = RenderSystem.getDynamicUniforms().writeTransform(
+                matrix,
+                new org.joml.Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
+                RenderSystem.getModelOffset(),
+                RenderSystem.getTextureMatrix(),
+                RenderSystem.getShaderLineWidth()
+        );
+        
         try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Splash Plane", Minecraft.getInstance().getMainRenderTarget().getColorTextureView(), OptionalInt.empty(), Minecraft.getInstance().getMainRenderTarget().getDepthTextureView(), OptionalDouble.empty())) {
             pass.setPipeline(RenderPipelines.TRANSLUCENT_MOVING_BLOCK);
             pass.bindSampler("Sampler0", RenderSystem.getShaderTexture(0));
             pass.bindSampler("Sampler2", RenderSystem.getShaderTexture(2));
             RenderSystem.bindDefaultUniforms(pass);
+            pass.setUniform("DynamicTransforms", dynamicTransform);
+
 
             pass.setVertexBuffer(0, buffer2);
             pass.setIndexBuffer(indices, RenderSystem.getSequentialBuffer(VertexFormat.Mode.TRIANGLES).type());

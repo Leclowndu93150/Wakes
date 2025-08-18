@@ -101,11 +101,21 @@ public class WakeRenderer {
 
         GpuBuffer buffer = DefaultVertexFormat.BLOCK.uploadImmediateVertexBuffer(built.vertexBuffer());
         GpuBuffer indices = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS).getBuffer(built.drawState().indexCount());
+
+        var dynamicTransform = RenderSystem.getDynamicUniforms().writeTransform(
+                matrix,
+                new org.joml.Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
+                RenderSystem.getModelOffset(),
+                RenderSystem.getTextureMatrix(),
+                RenderSystem.getShaderLineWidth()
+        );
+        
         try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Wake", Minecraft.getInstance().getMainRenderTarget().getColorTextureView(), OptionalInt.empty(), Minecraft.getInstance().getMainRenderTarget().getDepthTextureView(), OptionalDouble.empty())) {
             pass.setPipeline(RenderPipelines.TRANSLUCENT_MOVING_BLOCK);
             pass.bindSampler("Sampler0", RenderSystem.getShaderTexture(0));
             pass.bindSampler("Sampler2", RenderSystem.getShaderTexture(2));
             RenderSystem.bindDefaultUniforms(pass);
+            pass.setUniform("DynamicTransforms", dynamicTransform);
 
             pass.setVertexBuffer(0, buffer);
             pass.setIndexBuffer(indices, RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS).type());
