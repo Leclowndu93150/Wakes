@@ -148,8 +148,8 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
 		}
 	}
 
-	@Inject(at = @At("HEAD"), method = "moveTo(DDDFF)V")
-	private void onMoveTo(double x, double y, double z, float yaw, float pitch, CallbackInfo ci) {
+	@Inject(at = @At("HEAD"), method = "teleportTo(DDD)V")
+	private void onMoveTo(double x, double y, double z, CallbackInfo ci) {
 		Vec3 currentPos = this.position;
 		Vec3 newPos = new Vec3(x, y, z);
 		if (currentPos.distanceToSqr(newPos) > 400) {

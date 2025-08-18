@@ -10,7 +10,8 @@
     "WakeSpawnerMixin"
   ],
   "client": [
-    "DebugHudMixin"
+    "DebugHudMixin",
+    "LightmapTextureManagerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

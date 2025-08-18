@@ -17,13 +17,11 @@ import net.neoforged.bus.api.SubscribeEvent;
 import java.awt.Color;
 import java.util.Random;
 
-@EventBusSubscriber(bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
+@EventBusSubscriber(value = Dist.CLIENT)
 public class WakeDebugRenderer {
 
     @SubscribeEvent
-    public static void onRenderLevel(RenderLevelStageEvent event) {
-        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES) return;
-
+    public static void onRenderLevel(RenderLevelStageEvent.AfterParticles event) {
         WakeHandler wakeHandler = WakeHandler.getInstance().orElse(null);
         if (wakeHandler == null) return;
 

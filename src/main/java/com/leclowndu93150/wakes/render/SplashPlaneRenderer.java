@@ -7,18 +7,16 @@ import com.leclowndu93150.wakes.duck.ProducesWake;
 import com.leclowndu93150.wakes.particle.custom.SplashPlaneParticle;
 import com.leclowndu93150.wakes.simulation.WakeHandler;
 import com.leclowndu93150.wakes.utils.*;
-import com.mojang.blaze3d.platform.GlConst;
+import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.opengl.GlConst;
+import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 
 import com.mojang.math.Axis;
-import net.minecraft.client.renderer.CoreShaders;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -28,11 +26,9 @@ import net.neoforged.bus.api.EventPriority;
 import net.neoforged.api.distmarker.Dist;
 import org.joml.Matrix4f;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-@EventBusSubscriber(bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
+@EventBusSubscriber(value = Dist.CLIENT)
 public class SplashPlaneRenderer {
 
     private static ArrayList<Vector2D> points;
@@ -53,11 +49,7 @@ public class SplashPlaneRenderer {
     private static final double SQRT_8 = Math.sqrt(8);
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    public static void onRenderLevelStage(RenderLevelStageEvent event) {
-        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) {
-            return;
-        }
-
+    public static void onRenderLevelStage(RenderLevelStageEvent.AfterTranslucentBlocks event) {
         if (WakeHandler.getInstance().isEmpty()) {
             return;
         }
@@ -75,9 +67,6 @@ public class SplashPlaneRenderer {
         if (WakesConfig.GENERAL.disableMod.get() || !WakesUtils.getEffectRuleFromSource(entity).renderPlanes) {
             return;
         }
-        RenderSystem.setShader(CoreShaders.POSITION_TEX_COLOR);
-        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-        RenderSystem.enableBlend();
 
         matrices.pushPose();
         splashPlane.translateMatrix(context, matrices);
@@ -95,7 +84,7 @@ public class SplashPlaneRenderer {
     }
 
     private static void renderSurface(Matrix4f matrix) {
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
+        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.BLOCK);
         int light = LightTexture.FULL_BRIGHT;
         for (int s = -1; s < 2; s++) {
             if (s == 0) continue;
@@ -107,15 +96,27 @@ public class SplashPlaneRenderer {
                                 (float) (vertex.z * WakesConfig.APPEARANCE.splashPlaneHeight.get()),
                                 (float) (vertex.y * WakesConfig.APPEARANCE.splashPlaneDepth.get()))
                         .setUv((float) (vertex.x), (float) (vertex.y))
+                        .setLight(LightTexture.FULL_BRIGHT)
                         .setColor(1f, 1f, 1f, 1f)
                         .setNormal((float) normal.x, (float) normal.y, (float) normal.z);
             }
         }
 
-        RenderSystem.disableCull();
-        RenderSystem.enableDepthTest();
-        BufferUploader.drawWithShader(buffer.buildOrThrow());
-        RenderSystem.enableCull();
+        MeshData built = buffer.buildOrThrow();
+
+        GpuBuffer buffer2 = DefaultVertexFormat.BLOCK.uploadImmediateVertexBuffer(built.vertexBuffer());
+        GpuBuffer indices = RenderSystem.getSequentialBuffer(VertexFormat.Mode.TRIANGLES).getBuffer(built.drawState().indexCount());
+        try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Splash Plane", Minecraft.getInstance().getMainRenderTarget().getColorTextureView(), OptionalInt.empty(), Minecraft.getInstance().getMainRenderTarget().getDepthTextureView(), OptionalDouble.empty())) {
+            pass.setPipeline(RenderPipelines.TRANSLUCENT_MOVING_BLOCK);
+            pass.bindSampler("Sampler0", RenderSystem.getShaderTexture(0));
+            pass.bindSampler("Sampler2", RenderSystem.getShaderTexture(2));
+            RenderSystem.bindDefaultUniforms(pass);
+
+            pass.setVertexBuffer(0, buffer2);
+            pass.setIndexBuffer(indices, RenderSystem.getSequentialBuffer(VertexFormat.Mode.TRIANGLES).type());
+            pass.drawIndexed(0, 0, built.drawState().indexCount(), 1);
+        }
+        built.close();
     }
 
     private static double upperBound(double x) {

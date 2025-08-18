@@ -2,7 +2,7 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'idea'
-    id 'net.neoforged.moddev' version '2.0.78'
+    id 'net.neoforged.moddev' version '2.+'
 }
 
 version = mod_version
@@ -16,7 +16,7 @@ repositories {
 }
 
 base {
-    archivesName = mod_id+"-1.21.4-NeoForge"
+    archivesName = mod_id+"-1.21.6-NeoForge"
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
@@ -90,9 +90,9 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
 
-    implementation "curse.maven:irisshaders-455508:6213645"
+    compileOnly "curse.maven:irisshaders-455508:6213645"
     //implementation(files("libs/satin-1.0.0.jar"))
-    implementation "curse.maven:sodium-394468:6240357"
+    compileOnly "curse.maven:sodium-394468:6240357"
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

@@ -2,7 +2,6 @@ package com.leclowndu93150.wakes.config;
 
 import com.leclowndu93150.wakes.config.enums.EffectSpawningRule;
 import com.leclowndu93150.wakes.config.enums.Resolution;
-import com.leclowndu93150.wakes.render.enums.RenderType;
 import com.leclowndu93150.wakes.render.WakeColor;
 import com.google.common.collect.Lists;
 import net.neoforged.neoforge.common.ModConfigSpec;
@@ -176,7 +175,6 @@ public class WakesConfig {
         public final ModConfigSpec.BooleanValue showDebugInfo;
         public final ModConfigSpec.IntValue floodFillDistance;
         public final ModConfigSpec.IntValue floodFillTickDelay;
-        public final ModConfigSpec.EnumValue<RenderType> renderType;
 
         public Debug(ModConfigSpec.Builder builder) {
             debugColors = builder
@@ -193,9 +191,6 @@ public class WakesConfig {
 
             floodFillTickDelay = builder
                     .defineInRange("floodFillTickDelay", 2, 1, 20);
-
-            renderType = builder
-                    .defineEnum("renderType", RenderType.AUTO);
         }
     }
 

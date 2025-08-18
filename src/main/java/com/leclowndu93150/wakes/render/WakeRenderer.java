@@ -7,17 +7,16 @@ import com.leclowndu93150.wakes.simulation.Brick;
 import com.leclowndu93150.wakes.simulation.WakeHandler;
 import com.leclowndu93150.wakes.simulation.WakeNode;
 import com.leclowndu93150.wakes.utils.LightmapWrapper;
-import com.mojang.blaze3d.platform.GlConst;
+import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.opengl.GlConst;
+import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.bus.api.EventPriority;
@@ -29,8 +28,7 @@ import org.joml.Vector3f;
 
 import java.util.*;
 
-@EventBusSubscriber(value = Dist.CLIENT, bus = EventBusSubscriber.Bus.GAME)
-@OnlyIn(Dist.CLIENT)
+@EventBusSubscriber(value = Dist.CLIENT)
 public class WakeRenderer {
     public static Map<Resolution, WakeTexture> wakeTextures = null;
 
@@ -45,11 +43,7 @@ public class WakeRenderer {
     public static long lightmapTexure = -1;
 
     @SubscribeEvent(priority = EventPriority.NORMAL)
-    public static void onRenderLevel(RenderLevelStageEvent event) {
-        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) {
-            return;
-        }
-
+    public static void onRenderLevel(RenderLevelStageEvent.AfterTranslucentBlocks event) {
         if (WakesConfig.GENERAL.disableMod.get()) {
             WakesDebugInfo.quadsRendered = 0;
             return;
@@ -58,7 +52,6 @@ public class WakeRenderer {
         GameRenderer gameRenderer = Minecraft.getInstance().gameRenderer;
         LightTexture lightTexture = gameRenderer.lightTexture();
         lightTexture.turnOnLightLayer();
-        LightmapWrapper.updateTexture(lightTexture);
 
         if (wakeTextures == null) initTextures();
 
@@ -68,7 +61,6 @@ public class WakeRenderer {
         ArrayList<Brick> bricks = wakeHandler.getVisible(event.getFrustum(), Brick.class);
 
         Matrix4f matrix = event.getPoseStack().last().pose();
-        RenderSystem.enableBlend();
 
         Resolution resolution = WakeHandler.resolution;
         int n = 0;
@@ -85,26 +77,40 @@ public class WakeRenderer {
         if (!brick.hasPopulatedPixels) return;
         texture.loadTexture(brick.imgPtr, GlConst.GL_RGBA);
 
-        BufferBuilder buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
+        BufferBuilder bb = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
 
         Vector3f pos = brick.pos.add(camera.getPosition().reverse()).toVector3f().add(0, WakeNode.WATER_OFFSET, 0);
-        buffer.addVertex(matrix, pos.x, pos.y, pos.z)
+        bb.addVertex(matrix, pos.x, pos.y, pos.z)
                 .setUv(0, 0)
                 .setColor(1f, 1f, 1f, 1f)
                 .setNormal(0f, 1f, 0f);
-        buffer.addVertex(matrix, pos.x, pos.y, pos.z + brick.dim)
+        bb.addVertex(matrix, pos.x, pos.y, pos.z + brick.dim)
                 .setUv(0, 1)
                 .setColor(1f, 1f, 1f, 1f)
                 .setNormal(0f, 1f, 0f);
-        buffer.addVertex(matrix, pos.x + brick.dim, pos.y, pos.z + brick.dim)
+        bb.addVertex(matrix, pos.x + brick.dim, pos.y, pos.z + brick.dim)
                 .setUv(1, 1)
                 .setColor(1f, 1f, 1f, 1f)
                 .setNormal(0f, 1f, 0f);
-        buffer.addVertex(matrix, pos.x + brick.dim, pos.y, pos.z)
+        bb.addVertex(matrix, pos.x + brick.dim, pos.y, pos.z)
                 .setUv(1, 0)
                 .setColor(1f, 1f, 1f, 1f)
                 .setNormal(0f, 1f, 0f);
 
-        BufferUploader.drawWithShader(Objects.requireNonNull(buffer.build()));
+        MeshData built = bb.buildOrThrow();
+
+        GpuBuffer buffer = DefaultVertexFormat.BLOCK.uploadImmediateVertexBuffer(built.vertexBuffer());
+        GpuBuffer indices = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS).getBuffer(built.drawState().indexCount());
+        try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Wake", Minecraft.getInstance().getMainRenderTarget().getColorTextureView(), OptionalInt.empty(), Minecraft.getInstance().getMainRenderTarget().getDepthTextureView(), OptionalDouble.empty())) {
+            pass.setPipeline(RenderPipelines.TRANSLUCENT_MOVING_BLOCK);
+            pass.bindSampler("Sampler0", RenderSystem.getShaderTexture(0));
+            pass.bindSampler("Sampler2", RenderSystem.getShaderTexture(2));
+            RenderSystem.bindDefaultUniforms(pass);
+
+            pass.setVertexBuffer(0, buffer);
+            pass.setIndexBuffer(indices, RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS).type());
+            pass.drawIndexed(0, 0, built.drawState().indexCount(), 1);
+        }
+        built.close();
     }
 }
