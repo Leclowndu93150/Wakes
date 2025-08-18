@@ -1,11 +1,13 @@
 package com.leclowndu93150.wakes.render;
 
+import com.leclowndu93150.wakes.render.enums.RenderType;
 import com.leclowndu93150.wakes.simulation.QuadTree;
 import com.leclowndu93150.wakes.simulation.WakeHandler;
-import com.mojang.blaze3d.opengl.GlConst;
-import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.platform.GlConst;
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.TextureUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.renderer.CoreShaders;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL14;
 
