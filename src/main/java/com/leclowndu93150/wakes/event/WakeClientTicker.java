@@ -2,8 +2,10 @@ package com.leclowndu93150.wakes.event;
 
 import com.leclowndu93150.wakes.simulation.WakeHandler;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -18,6 +20,13 @@ public class WakeClientTicker {
             WakeHandler.kill();
         } else if (WakeHandler.getInstance(client.level).isEmpty()) {
             WakeHandler.init(client.level);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onLevelUnload(LevelEvent.Unload event) {
+        if (event.getLevel() instanceof ClientLevel clientLevel) {
+            WakeHandler.killDimension(clientLevel.dimension());
         }
     }
 }
