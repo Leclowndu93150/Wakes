@@ -101,7 +101,10 @@ public class WakesConfig {
 
             List<String> defaultFluids = Lists.newArrayList(
                     "minecraft:water",
-                    "minecraft:flowing_water"
+                    "minecraft:flowing_water",
+                    "tfc:salt_water",
+                    "tfc:spring_water",
+                    "tfc:river_water"
             );
 
             fluidWhitelist = builder

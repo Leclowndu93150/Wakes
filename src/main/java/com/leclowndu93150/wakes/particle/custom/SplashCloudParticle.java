@@ -1,5 +1,6 @@
 package com.leclowndu93150.wakes.particle.custom;
 
+import com.leclowndu93150.wakes.config.WakesConfig;
 import com.leclowndu93150.wakes.particle.WithOwnerParticleType;
 import com.leclowndu93150.wakes.simulation.WakeNode;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -54,7 +55,7 @@ public class SplashCloudParticle extends TextureSheetParticle {
         this.yo = this.y;
         this.zo = this.z;
 
-        if (level.getFluidState(new BlockPos((int) this.x, (int) this.y, (int) this.z)).is(Fluids.WATER)) {
+        if (WakesConfig.getFluidWhitelist().contains(level.getFluidState(new BlockPos((int) this.x, (int) this.y, (int) this.z)).getType())) {
             this.yd = 0.1;
             this.xd *= 0.92;
             this.yd *= 0.92;
