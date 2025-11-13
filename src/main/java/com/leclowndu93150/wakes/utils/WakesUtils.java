@@ -93,8 +93,10 @@ public class WakesUtils {
     }
 
     public static EffectSpawningRule getEffectRuleFromSource(Entity source) {
-        ResourceLocation entityId = EntityType.getKey(source.getType());
-        if (WakesConfig.GENERAL.blacklistedMobs.get().contains(entityId.toString())) {
+        if (source == null) {
+            return EffectSpawningRule.DISABLED;
+        }
+        if (WakesConfig.getMobBlacklist().contains(source.getType())) {
             return EffectSpawningRule.DISABLED;
         }
         
@@ -260,7 +262,7 @@ public class WakesUtils {
                 for (int z = minZ; z < maxZ; ++z) {
                     blockPos.set(x, y, z);
                     FluidState fluidState = world.getFluidState(blockPos);
-                    if (fluidState.isSource()) {
+                    if (WakesConfig.getFluidWhitelist().contains(fluidState.getType()) && fluidState.isSource()) {
                         f = Math.max(f, fluidState.getHeight(world, blockPos));
                     }
                     if (f >= 1.0f) continue yLoop;
