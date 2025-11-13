@@ -7,6 +7,12 @@ import com.leclowndu93150.wakes.render.WakeColor;
 import com.google.common.collect.Lists;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.entity.EntityType;
 
 public class WakesConfig {
     public static final ModConfigSpec CLIENT_SPEC;
@@ -14,6 +20,9 @@ public class WakesConfig {
     public static final General GENERAL;
     public static final Appearance APPEARANCE;
     public static final Debug DEBUG;
+
+    private static Set<Fluid> fluidCache = null;
+    private static Set<EntityType<?>> mobBlacklistCache = null;
 
     static {
         ModConfigSpec.Builder clientBuilder = new ModConfigSpec.Builder();
@@ -40,6 +49,9 @@ public class WakesConfig {
         public final ModConfigSpec.IntValue initialStrength;
         public final ModConfigSpec.IntValue paddleStrength;
         public final ModConfigSpec.IntValue splashStrength;
+
+        public final ModConfigSpec.ConfigValue<List<? extends String>> fluidWhitelist;
+        public final ModConfigSpec.ConfigValue<List<? extends String>> mobBlacklist;
 
         public General(ModConfigSpec.Builder builder) {
             disableMod = builder
@@ -86,6 +98,21 @@ public class WakesConfig {
                     .defineInRange("splashStrength", 100, 0, Integer.MAX_VALUE);
 
             builder.pop();
+
+            List<String> defaultFluids = Lists.newArrayList(
+                    "minecraft:water",
+                    "minecraft:flowing_water"
+            );
+
+            fluidWhitelist = builder
+                    .comment("List of fluid IDs that can produce wakes")
+                    .defineList("fluidWhitelist", defaultFluids, obj -> obj instanceof String);
+
+            List<String> defaultMobBlacklist = Lists.newArrayList();
+
+            mobBlacklist = builder
+                    .comment("List of entity type IDs that should not produce wakes")
+                    .defineList("mobBlacklist", defaultMobBlacklist, obj -> obj instanceof String);
         }
     }
 
@@ -201,5 +228,30 @@ public class WakesConfig {
 
     public static WakeColor getWakeColor(int i) {
         return new WakeColor(APPEARANCE.wakeColors.get().get(i));
+    }
+
+    public static Set<Fluid> getFluidWhitelist() {
+        if (fluidCache == null) {
+            fluidCache = GENERAL.fluidWhitelist.get().stream()
+                    .map(ResourceLocation::parse)
+                    .map(BuiltInRegistries.FLUID::get)
+                    .collect(Collectors.toSet());
+        }
+        return fluidCache;
+    }
+
+    public static Set<EntityType<?>> getMobBlacklist() {
+        if (mobBlacklistCache == null) {
+            mobBlacklistCache = GENERAL.mobBlacklist.get().stream()
+                    .map(ResourceLocation::parse)
+                    .map(BuiltInRegistries.ENTITY_TYPE::get)
+                    .collect(Collectors.toSet());
+        }
+        return mobBlacklistCache;
+    }
+
+    public static void clearCache() {
+        fluidCache = null;
+        mobBlacklistCache = null;
     }
 }

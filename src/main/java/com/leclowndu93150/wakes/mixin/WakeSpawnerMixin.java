@@ -102,15 +102,29 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
 
 	@Unique
 	private boolean onFluidSurface() {
-		double hitboxMaxY = this.getBoundingBox().maxY;
-		BlockPos blockPos = BlockPos.containing(this.getX(), hitboxMaxY, this.getZ());
-		FluidState fluidState = this.level.getFluidState(blockPos);
-		double fluidHeight = (float)blockPos.getY() + fluidState.getHeight(this.level, blockPos);
-		return this.isInWater() && hitboxMaxY > fluidHeight;
+		AABB box = this.getBoundingBox();
+		double hitboxMaxY = box.maxY;
+		
+		BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
+		for (int y = (int) Math.floor(box.minY); y <= (int) Math.floor(hitboxMaxY); y++) {
+			blockPos.set(this.getX(), y, this.getZ());
+			FluidState fluidState = this.level.getFluidState(blockPos);
+			
+			if (!fluidState.isEmpty() && WakesConfig.getFluidWhitelist().contains(fluidState.getType())) {
+				double fluidHeight = (float)blockPos.getY() + fluidState.getHeight(this.level, blockPos);
+				return hitboxMaxY > fluidHeight;
+			}
+		}
+		
+		return false;
 	}
 
 	@Inject(at = @At("TAIL"), method = "tick")
 	private void tick(CallbackInfo info) {
+		if (!this.level.isClientSide) {
+			return;
+		}
+		
 		this.onFluidSurface = onFluidSurface();
 		Entity thisEntity = ((Entity) (Object) this);
 		Vec3 vel = this.calculateVelocity(thisEntity);
@@ -120,6 +134,7 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
 		if (WakesConfig.GENERAL.disableMod.get()) {
 			return;
 		}
+
 
 		if (this.onFluidSurface && !this.hasRecentlyTeleported) {
 			this.wakeHeight = WakesUtils.getFluidLevel(this.level, thisEntity);
