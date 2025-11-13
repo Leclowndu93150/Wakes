@@ -36,6 +36,8 @@ public class WakesConfig {
         public final ForgeConfigSpec.EnumValue<EffectSpawningRule> mobSpawning;
         public final ForgeConfigSpec.EnumValue<EffectSpawningRule> itemSpawning;
 
+        public final ForgeConfigSpec.ConfigValue<List<? extends String>> blacklistedMobs;
+
         public final ForgeConfigSpec.DoubleValue wavePropagationFactor;
         public final ForgeConfigSpec.DoubleValue waveDecayFactor;
         public final ForgeConfigSpec.IntValue initialStrength;
@@ -66,6 +68,10 @@ public class WakesConfig {
 
             itemSpawning = builder
                     .defineEnum("itemSpawning", EffectSpawningRule.ONLY_SIMULATION);
+
+            blacklistedMobs = builder
+                    .comment("List of entity type IDs that should not produce wakes (e.g., \"minecraft:dolphin\", \"minecraft:squid\")")
+                    .defineList("blacklistedMobs", Lists.newArrayList(), obj -> obj instanceof String);
 
             builder.pop();
 
