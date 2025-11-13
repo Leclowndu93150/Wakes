@@ -33,7 +33,7 @@ public class WakeNode {
     public float t = 0;
     public int floodLevel;
 
-    private WakeNode(int x, int y, int z, int floodLevel) {
+    public WakeNode(int x, int y, int z, int floodLevel) {
         this.simulationNode = new SimulationNode.WakeSimulation();
         this.x = x;
         this.y = y;

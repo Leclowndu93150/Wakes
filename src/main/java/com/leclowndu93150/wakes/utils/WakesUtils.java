@@ -1,6 +1,8 @@
 package com.leclowndu93150.wakes.utils;
 
+import com.alekiponi.alekiships.common.entity.vehicle.AbstractAlekiBoatEntity;
 import com.leclowndu93150.wakes.WakesClient;
+import com.leclowndu93150.wakes.compat.alekiships.AlekiShipsCompat;
 import com.leclowndu93150.wakes.config.WakesConfig;
 import com.leclowndu93150.wakes.config.enums.EffectSpawningRule;
 import com.leclowndu93150.wakes.duck.ProducesWake;
@@ -77,12 +79,10 @@ public class WakesUtils {
             if (WakesConfig.APPEARANCE.spawnParticles.get()) {
                 WakesUtils.spawnPaddleSplashCloudParticle(entity.level(), boat);
             }
+        } else if (AlekiShipsCompat.isAlekiShipsBoat(entity)) {
+            spawnAlekiShipsWakes(entity, wakeHandler, y);
         }
       
-        // TODO FIX ENTERING BOAT CREATES LONG WAKE
-        // if (velocity < WakesConfig.minimumProducerVelocity) {
-        //     ((ProducesWake) entity).setPrevPos(null);
-        // }
         Vec3 prevPos = producer.wakes$getPrevPos();
         if (prevPos == null) {
             return;
@@ -92,12 +92,57 @@ public class WakesUtils {
         }
     }
 
+    private static void spawnAlekiShipsWakes(Entity entity, WakeHandler wakeHandler, int y) {
+        try {
+            if (AlekiShipsCompat.isAlekiShipsLoaded()) {
+                AbstractAlekiBoatEntity boat = (AbstractAlekiBoatEntity) entity;
+                ProducesWake producer = (ProducesWake) entity;
+                float wakeHeight = producer.wakes$wakeHeight();
+                
+                AlekiShipsCompat.PaddleInfo paddleInfo = AlekiShipsCompat.getPaddleInfo(boat, 1.0f, wakeHeight);
+                
+                double velocity = boat.getDeltaMovement().horizontalDistance();
+                int wakeY = (int) Math.floor(wakeHeight);
+                
+                for (int i = 0; i < paddleInfo.positions().length; i++) {
+                    if (paddleInfo.inWater()[i]) {
+                        Vec3 pos = paddleInfo.positions()[i];
+                        Vec3 dir = Vec3.directionFromRotation(0, boat.getYRot()).scale(velocity);
+                        Vec3 from = pos.subtract(dir.scale(1));
+                        Vec3 to = pos.add(dir.scale(1));
+                        
+                        for (WakeNode node : WakeNode.Factory.nodeTrail(from.x, from.z, to.x, to.z, wakeY, WakesConfig.GENERAL.paddleStrength.get(), velocity)) {
+                            wakeHandler.insert(node);
+                        }
+                        
+                        if (WakesConfig.APPEARANCE.spawnParticles.get()) {
+                            entity.level().addParticle(ModParticles.SPLASH_CLOUD.get(), 
+                                pos.x, pos.y, pos.z, 0, 0, 0);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+        }
+    }
+
     public static EffectSpawningRule getEffectRuleFromSource(Entity source) {
         if (source == null) {
             return EffectSpawningRule.DISABLED;
         }
         if (WakesConfig.getMobBlacklist().contains(source.getType())) {
             return EffectSpawningRule.DISABLED;
+        }
+        
+        if (AlekiShipsCompat.isAlekiShipsBoat(source)) {
+            List<Entity> passengers = source.getPassengers();
+            if (passengers.contains(Minecraft.getInstance().player)) {
+                return WakesConfig.GENERAL.boatSpawning.get();
+            }
+            if (passengers.stream().anyMatch(Entity::isAlwaysTicking)) {
+                return WakesConfig.GENERAL.boatSpawning.get().mask(WakesConfig.GENERAL.otherPlayersSpawning.get());
+            }
+            return WakesConfig.GENERAL.boatSpawning.get();
         }
         
         if (source instanceof Boat boat) {

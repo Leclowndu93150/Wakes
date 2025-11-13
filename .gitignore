@@ -4,6 +4,8 @@
 *.iml
 *.ipr
 *.iws
+.claude
+alekiships-1.20.x
 
 # IntelliJ
 out/

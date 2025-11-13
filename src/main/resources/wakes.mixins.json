@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "wakes.refmap.json",
   "mixins": [
+    "AlekiBoatAccessor"
   ],
   "client": [
     "DebugHudMixin",
