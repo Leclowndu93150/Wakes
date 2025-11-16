@@ -13,6 +13,10 @@ repositories {
     maven{
         url = "https://cursemaven.com"
     }
+    maven {
+        name = "Valkyrien Skies"
+        url = "https://maven.valkyrienskies.org"
+    }
 }
 
 base {
@@ -104,8 +108,26 @@ dependencies {
     modCompileOnlyApi "curse.maven:oculus-581495:6020952"
     //implementation(files("libs/satin-1.0.0.jar"))
     modCompileOnlyApi "curse.maven:embeddium-908741:5681725"
-
+    modImplementation "curse.maven:valkyrien-skies-258371:7178865"
+    modImplementation "curse.maven:kotlin-for-forge-351264:5402061"
     modImplementation "curse.maven:alekiships-1068445:5963449"
+    modImplementation"curse.maven:eureka-ships-654384:5321630"
+
+    compileOnly("org.valkyrienskies:valkyrienskies-120-forge:${vs2_version}") {
+        exclude group: 'com.simibubi', module: ''
+        exclude group: 'dev.engine-room', module: ''
+        exclude group: 'com.jozufozu', module: ''
+    }
+    compileOnly("org.valkyrienskies.core:api:${vscore_version}") {
+        exclude group: 'org.joml', module: ''
+    }
+    compileOnly("org.valkyrienskies.core:api-game:${vscore_version}") {
+        exclude group: 'org.joml', module: ''
+    }
+    compileOnly("org.valkyrienskies.core:util:${vscore_version}") {
+        exclude group: 'org.joml', module: ''
+    }
+    compileOnly 'org.joml:joml-primitives:1.10.0'
 }
 
 mixin {
