@@ -13,6 +13,13 @@ public class VSUtils {
         double centreZ = (aabb.maxZ() + aabb.minZ())/2;
         return new Vec3(centreX, aabb.minY(), centreZ);
     }
+    
+    public static Vec3 getCentreD(AABBdc aabb) {
+        double centreX = (aabb.maxX() + aabb.minX())/2;
+        double centreY = (aabb.maxY() + aabb.minY())/2;
+        double centreZ = (aabb.maxZ() + aabb.minZ())/2;
+        return new Vec3(centreX, centreY, centreZ);
+    }
 
     public static Vector3d getCentre(AABBic aabb) {
         double centreX = (double) (aabb.maxX() + aabb.minX()) /2;

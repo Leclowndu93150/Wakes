@@ -1,6 +1,9 @@
 package com.leclowndu93150.wakes.compat.valkyrienskies;
 
+import com.leclowndu93150.wakes.config.WakesConfig;
 import com.leclowndu93150.wakes.duck.ProducesWake;
+import com.leclowndu93150.wakes.particle.ModParticles;
+import com.leclowndu93150.wakes.particle.WithOwnerParticleType;
 import com.leclowndu93150.wakes.simulation.WakeHandler;
 import com.leclowndu93150.wakes.simulation.WakeNode;
 import net.minecraft.client.Minecraft;
@@ -8,6 +11,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Quaterniondc;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
 import org.joml.Vector3i;
@@ -39,13 +43,39 @@ public class ShipWake {
                 if (width > MAX_WIDTH) return;
 
                 double toX = ((DynamicWakeSize)ship).getPos().x;
-                double toY = ((DynamicWakeSize)ship).getPos().z;
+                double toZ = ((DynamicWakeSize)ship).getPos().z;
+                
+                double dx = toX - prevPos.x;
+                double dz = toZ - prevPos.z;
+                double distance = Math.sqrt(dx * dx + dz * dz);
+                
+                int maxSegmentLength = 10;
+                
+                if (distance > maxSegmentLength) {
+                    int segments = (int) Math.ceil(distance / maxSegmentLength);
+                    for (int i = 0; i < segments; i++) {
+                        double t1 = (double) i / segments;
+                        double t2 = (double) (i + 1) / segments;
+                        
+                        double x1 = prevPos.x + dx * t1;
+                        double z1 = prevPos.z + dz * t1;
+                        double x2 = prevPos.x + dx * t2;
+                        double z2 = prevPos.z + dz * t2;
+                        
+                        var7 = WakeNode.Factory.thickNodeTrail(x1, z1, x2, z2, (int)Math.floor(height), com.leclowndu93150.wakes.config.WakesConfig.GENERAL.initialStrength.get(), velocity, width).iterator();
+                        
+                        while(var7.hasNext()) {
+                            node = var7.next();
+                            wakeHandler.insert(node);
+                        }
+                    }
+                } else {
+                    var7 = WakeNode.Factory.thickNodeTrail(prevPos.x, prevPos.z, toX, toZ, (int)Math.floor(height), com.leclowndu93150.wakes.config.WakesConfig.GENERAL.initialStrength.get(), velocity, width).iterator();
 
-                var7 = WakeNode.Factory.thickNodeTrail(prevPos.x, prevPos.z, toX, toY, (int)Math.floor(height), com.leclowndu93150.wakes.config.WakesConfig.GENERAL.initialStrength.get(), velocity, width).iterator();
-
-                while(var7.hasNext()) {
-                    node = var7.next();
-                    wakeHandler.insert(node);
+                    while(var7.hasNext()) {
+                        node = var7.next();
+                        wakeHandler.insert(node);
+                    }
                 }
             }
         }
