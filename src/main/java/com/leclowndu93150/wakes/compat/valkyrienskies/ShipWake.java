@@ -1,9 +1,5 @@
 package com.leclowndu93150.wakes.compat.valkyrienskies;
 
-import com.leclowndu93150.wakes.config.WakesConfig;
-import com.leclowndu93150.wakes.duck.ProducesWake;
-import com.leclowndu93150.wakes.particle.ModParticles;
-import com.leclowndu93150.wakes.particle.WithOwnerParticleType;
 import com.leclowndu93150.wakes.simulation.WakeHandler;
 import com.leclowndu93150.wakes.simulation.WakeNode;
 import net.minecraft.client.Minecraft;
@@ -11,7 +7,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import org.joml.Quaterniondc;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
 import org.joml.Vector3i;
@@ -25,25 +20,24 @@ import java.util.*;
 public class ShipWake {
     private static final int MAX_WIDTH = 24;
 
-    public static void placeWakeTrail(Ship ship) {
+    public static void placeWakeTrail(Ship ship, ShipWakeData data) {
         if (Minecraft.getInstance().level == null) return;
         WakeHandler wakeHandler = WakeHandler.getInstance(Minecraft.getInstance().level).orElse(null);
         if (wakeHandler != null) {
-            ProducesWake producer = (ProducesWake)ship;
-            double velocity = producer.wakes$getHorizontalVelocity();
-            float height = producer.wakes$wakeHeight();
+            double velocity = data.getHorizontalVelocity();
+            float height = data.wakeHeight();
             Iterator<WakeNode> var7;
             WakeNode node;
 
-            Vec3 prevPos = producer.wakes$getPrevPos();
+            Vec3 prevPos = data.getPrevPos();
 
             if (prevPos != null) {
-                float width = ((DynamicWakeSize)ship).getWidth();
+                float width = data.getWidth();
 
                 if (width > MAX_WIDTH) return;
 
-                double toX = ((DynamicWakeSize)ship).getPos().x;
-                double toZ = ((DynamicWakeSize)ship).getPos().z;
+                double toX = data.getPos().x;
+                double toZ = data.getPos().z;
                 
                 double dx = toX - prevPos.x;
                 double dz = toZ - prevPos.z;
@@ -83,6 +77,7 @@ public class ShipWake {
 
     public static void checkShipSize(Ship s) {
         Level level = Minecraft.getInstance().level;
+        ShipWakeData data = ValkyrienSkiesCompat.getInstance().getOrCreateWakeData(s);
 
         Vector3dc horizontalVelocity = new Vector3d(s.getVelocity().x(), 0, s.getVelocity().z());
 
@@ -113,18 +108,18 @@ public class ShipWake {
         int shipZ = shipBounds.maxZ() - shipBounds.minZ();
 
         if ((direction == Direction.NORTH || direction == Direction.SOUTH) && (shipX > shipZ)) {
-            ((DynamicWakeSize) s).setWidth(0);
+            data.setWidth(0);
             return;
         } else if ((direction == Direction.EAST || direction == Direction.WEST) && (shipZ > shipX)) {
-            ((DynamicWakeSize) s).setWidth(0);
+            data.setWidth(0);
             return;
         }
 
-        calculateShipWidthAndOffset(level, minWorldPos, maxWorldPos, blockYLevelShip, direction, s);
+        calculateShipWidthAndOffset(level, minWorldPos, maxWorldPos, blockYLevelShip, direction, s, data);
     }
 
     private static void calculateShipWidthAndOffset(Level level, Vector3i minWorldPos, Vector3i maxWorldPos,
-                                                    int blockYLevelShip, Direction direction, Ship s) {
+                                                    int blockYLevelShip, Direction direction, Ship s, ShipWakeData data) {
         boolean isZAxis = (direction == Direction.NORTH || direction == Direction.SOUTH);
 
         int primaryMin = isZAxis ? minWorldPos.z() : minWorldPos.x();
@@ -167,14 +162,14 @@ public class ShipWake {
             }
         }
 
-        ((DynamicWakeSize) s).setWidth(width);
+        data.setWidth(width);
 
         Vector3d offsetReal;
 
         if (!offset.equals(0,0,0)) {
             Vector3d shipCentre = VSUtils.getCentre(Objects.requireNonNull(s.getShipAABB()));
             offsetReal = new Vector3d(shipCentre.x, 0, shipCentre.z).sub(offset);
-            ((DynamicWakeSize) s).setOffset(offsetReal.negate());
+            data.setOffset(offsetReal.negate());
         }
     }
 
