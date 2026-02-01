@@ -55,7 +55,8 @@ public class SplashCloudParticle extends TextureSheetParticle {
         this.yo = this.y;
         this.zo = this.z;
 
-        if (WakesConfig.getFluidWhitelist().contains(level.getFluidState(new BlockPos((int) this.x, (int) this.y, (int) this.z)).getType())) {
+        var fluidState = level.getFluidState(new BlockPos((int) this.x, (int) this.y, (int) this.z));
+        if (fluidState.isSource() && WakesConfig.getFluidWhitelist().contains(fluidState.getType())) {
             this.yd = 0.1;
             this.xd *= 0.92;
             this.yd *= 0.92;
