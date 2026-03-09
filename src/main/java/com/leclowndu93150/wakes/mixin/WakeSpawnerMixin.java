@@ -6,6 +6,7 @@ import com.leclowndu93150.wakes.duck.ProducesWake;
 import com.leclowndu93150.wakes.particle.custom.SplashPlaneParticle;
 import com.leclowndu93150.wakes.utils.WakesUtils;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.material.Material;
@@ -14,6 +15,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.fluids.BlockFluidBase;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -141,7 +143,15 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
             blockPos.setPos((int) Math.floor(this.posX), y, (int) Math.floor(this.posZ));
             IBlockState state = this.world.getBlockState(blockPos);
             if (state.getMaterial() == Material.WATER) {
-                int level = state.getBlock() instanceof BlockLiquid ? state.getValue(BlockLiquid.LEVEL) : 0;
+                Block block = state.getBlock();
+                int level;
+                if (block instanceof BlockLiquid) {
+                    level = state.getValue(BlockLiquid.LEVEL);
+                } else if (block instanceof BlockFluidBase) {
+                    level = state.getValue(BlockFluidBase.LEVEL);
+                } else {
+                    level = 0;
+                }
                 float fluidHeight = (float) blockPos.getY() + BlockLiquid.getLiquidHeightPercent(level);
                 return hitboxMaxY > fluidHeight;
             }

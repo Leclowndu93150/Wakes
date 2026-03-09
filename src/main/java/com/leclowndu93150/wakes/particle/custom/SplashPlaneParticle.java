@@ -12,9 +12,9 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityBoat;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeColorHelper;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -147,8 +147,9 @@ public class SplashPlaneParticle extends Particle {
 
     public void populatePixels() {
         if (this.owner == null) return;
-        int fluidColor = WaterTintUtils.normalizeBiomeWaterColor(BiomeColorHelper.getWaterColorAtPos(world, this.owner.getPosition()));
-        int light = world.getCombinedLight(this.owner.getPosition(), 0);
+        BlockPos ownerPos = this.owner.getPosition();
+        int fluidColor = WaterTintUtils.getFluidColor(world, ownerPos);
+        int light = world.getCombinedLight(ownerPos, 0);
         int skyLight = (light >> 20) & 0xF;
         int blockLight = (light >> 4) & 0xF;
         float sunBrightness = world.getSunBrightness(1.0f);

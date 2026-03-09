@@ -9,6 +9,7 @@ import com.leclowndu93150.wakes.simulation.WakeHandler;
 import com.leclowndu93150.wakes.simulation.WakeNode;
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -24,6 +25,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.fluids.BlockFluidBase;
 
 public class WakesUtils {
 
@@ -238,9 +240,17 @@ public class WakesUtils {
                     blockPos.setPos(x, y, z);
                     IBlockState state = world.getBlockState(blockPos);
                     if (state.getMaterial() == Material.WATER) {
-                        int level = state.getBlock() instanceof BlockLiquid ? state.getValue(BlockLiquid.LEVEL) : 0;
-                        if (level == 0) {
-                            float height = BlockLiquid.getLiquidHeightPercent(level);
+                        Block block = state.getBlock();
+                        boolean isSource;
+                        if (block instanceof BlockLiquid) {
+                            isSource = state.getValue(BlockLiquid.LEVEL) == 0;
+                        } else if (block instanceof BlockFluidBase) {
+                            isSource = state.getValue(BlockFluidBase.LEVEL) == ((BlockFluidBase) block).getMaxRenderHeightMeta();
+                        } else {
+                            isSource = true;
+                        }
+                        if (isSource) {
+                            float height = BlockLiquid.getLiquidHeightPercent(0);
                             f = Math.max(f, height);
                         }
                     }

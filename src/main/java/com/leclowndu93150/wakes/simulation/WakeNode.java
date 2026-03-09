@@ -3,6 +3,7 @@ package com.leclowndu93150.wakes.simulation;
 import com.leclowndu93150.wakes.config.WakesConfig;
 import com.leclowndu93150.wakes.utils.WakesUtils;
 import java.util.*;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -11,6 +12,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.fluids.BlockFluidBase;
 
 public class WakeNode {
     public final SimulationNode simulationNode;
@@ -134,8 +136,14 @@ public class WakeNode {
         IBlockState state = world.getBlockState(pos);
         IBlockState stateAbove = world.getBlockState(pos.up());
         if (state.getMaterial() == Material.WATER && stateAbove.getMaterial() != Material.WATER) {
-            int level = state.getBlock() instanceof BlockLiquid ? state.getValue(BlockLiquid.LEVEL) : 0;
-            return level == 0;
+            Block block = state.getBlock();
+            if (block instanceof BlockLiquid) {
+                return state.getValue(BlockLiquid.LEVEL) == 0;
+            }
+            if (block instanceof BlockFluidBase) {
+                return state.getValue(BlockFluidBase.LEVEL) == ((BlockFluidBase) block).getMaxRenderHeightMeta();
+            }
+            return false;
         }
         return false;
     }
