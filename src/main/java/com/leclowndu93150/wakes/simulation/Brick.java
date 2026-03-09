@@ -12,11 +12,14 @@ import java.util.Objects;
 import java.util.stream.Stream;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.MobEffects;
+import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeColorHelper;
 
 public class Brick {
     private final WakeNode[][] nodes;
@@ -184,6 +187,7 @@ public class Brick {
         }
 
         World world = Minecraft.getMinecraft().world;
+        float nightVisionFactor = getNightVisionFactor();
         for (int z = 0; z < dim; z++) {
             for (int x = 0; x < dim; x++) {
                 WakeNode node = this.get(x, z);
@@ -192,13 +196,16 @@ public class Brick {
                 float opacity = 0;
                 if (node != null) {
                     BlockPos blockPos = node.blockPos();
-                    fluidColor = WaterTintUtils.normalizeBiomeWaterColor(BiomeColorHelper.getWaterColorAtPos(world, blockPos));
+                    fluidColor = WaterTintUtils.getFluidColor(world, blockPos);
                     int light = world.getCombinedLight(blockPos, 0);
                     int skyLight = (light >> 20) & 0xF;
                     int blockLight = (light >> 4) & 0xF;
                     float sunBrightness = world.getSunBrightness(1.0f);
                     float effectiveSkyLight = skyLight * sunBrightness;
                     float brightness = Math.max(effectiveSkyLight, blockLight) / 15f;
+                    if (nightVisionFactor > 0) {
+                        brightness = Math.max(brightness, nightVisionFactor);
+                    }
                     int b = (int) (brightness * 255);
                     lightCol = 0xFF000000 | (b << 16) | (b << 8) | b;
                     opacity = (float) ((-Math.pow(node.t, 2) + 1) * WakesConfig.wakeOpacity);
@@ -218,5 +225,16 @@ public class Brick {
             }
         }
         hasPopulatedPixels = true;
+    }
+
+    private static float getNightVisionFactor() {
+        EntityPlayer player = Minecraft.getMinecraft().player;
+        if (player == null || !player.isPotionActive(MobEffects.NIGHT_VISION)) {
+            return 0;
+        }
+        PotionEffect effect = player.getActivePotionEffect(MobEffects.NIGHT_VISION);
+        if (effect == null) return 0;
+        int duration = effect.getDuration();
+        return duration > 200 ? 1.0f : 0.7f + MathHelper.sin(((float) duration) * (float) Math.PI * 0.2f) * 0.3f;
     }
 }
