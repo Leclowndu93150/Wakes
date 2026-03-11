@@ -93,6 +93,7 @@ public class SplashPlaneRenderer {
         GlStateManager.disableLighting();
         GlStateManager.disableAlpha();
         GlStateManager.depthMask(false);
+        GL11.glEnable(GL11.GL_FOG);
 
         float x = (float) (MathHelper.clampedLerp(splashPlane.getPrevX(), splashPlane.getX(), partialTicks) - cx);
         float y = (float) (MathHelper.clampedLerp(splashPlane.getPrevY(), splashPlane.getY(), partialTicks) - cy);

@@ -73,6 +73,7 @@ public class WakeRenderer {
         GlStateManager.disableLighting();
         GlStateManager.disableAlpha();
         GlStateManager.depthMask(false);
+        GL11.glEnable(GL11.GL_FOG);
 
         for (Brick brick : bricks) {
             render(cx, cy, cz, brick, wakeTextures.get(resolution));

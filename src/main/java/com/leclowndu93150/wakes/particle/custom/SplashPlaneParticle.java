@@ -148,7 +148,8 @@ public class SplashPlaneParticle extends Particle {
     public void populatePixels() {
         if (this.owner == null) return;
         BlockPos ownerPos = this.owner.getPosition();
-        int fluidColor = WaterTintUtils.getFluidColor(world, ownerPos);
+        BlockPos fluidPos = world.getBlockState(ownerPos).getMaterial().isLiquid() ? ownerPos : ownerPos.down();
+        int fluidColor = WaterTintUtils.getFluidColor(world, fluidPos);
         int light = world.getCombinedLight(ownerPos, 0);
         int skyLight = (light >> 20) & 0xF;
         int blockLight = (light >> 4) & 0xF;
