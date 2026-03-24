@@ -7,17 +7,17 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.SimpleParticleType;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.material.Fluids;
 import org.jetbrains.annotations.Nullable;
 
-public class SplashCloudParticle extends TextureSheetParticle {
+public class SplashCloudParticle extends SingleQuadParticle {
     Entity owner;
     final double offset;
     final boolean isFromPaddles;
 
-    public SplashCloudParticle(ClientLevel world, double x, double y, double z, SpriteSet sprites, double velocityX, double velocityY, double velocityZ) {
-        super(world, x, y, z, velocityX, velocityY, velocityZ);
+    public SplashCloudParticle(ClientLevel world, double x, double y, double z, TextureAtlasSprite sprite, double velocityX, double velocityY, double velocityZ) {
+        super(world, x, y, z, sprite);
         this.xd = velocityX;
         this.yd = velocityY;
         this.zd = velocityZ;
@@ -27,7 +27,6 @@ public class SplashCloudParticle extends TextureSheetParticle {
         this.zo = z;
 
         this.lifetime = (int) (WakeNode.maxAge * 1.5);
-        this.setSprite(sprites.get(world.random));
 
         this.offset = velocityX;
         this.isFromPaddles = velocityX == 0;
@@ -76,8 +75,8 @@ public class SplashCloudParticle extends TextureSheetParticle {
     }
 
     @Override
-    public ParticleRenderType getRenderType() {
-        return ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
+    protected SingleQuadParticle.Layer getLayer() {
+        return SingleQuadParticle.Layer.bySprite(this.sprite);
     }
 
     public static class Factory implements ParticleProvider<SimpleParticleType> {
@@ -89,8 +88,9 @@ public class SplashCloudParticle extends TextureSheetParticle {
 
         @Nullable
         @Override
-        public Particle createParticle(SimpleParticleType parameters, ClientLevel world, double x, double y, double z, double velocityX, double velocityY, double velocityZ) {
-            SplashCloudParticle cloud = new SplashCloudParticle(world, x, y, z, this.sprites, velocityX, velocityY, velocityZ);
+        public Particle createParticle(SimpleParticleType parameters, ClientLevel world, double x, double y, double z, double velocityX, double velocityY, double velocityZ, net.minecraft.util.RandomSource random) {
+            TextureAtlasSprite sprite = this.sprites.get(world.getRandom());
+            SplashCloudParticle cloud = new SplashCloudParticle(world, x, y, z, sprite, velocityX, velocityY, velocityZ);
             if (parameters instanceof WithOwnerParticleType type) {
                 cloud.owner = type.owner;
             }

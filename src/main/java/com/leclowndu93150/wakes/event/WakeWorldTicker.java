@@ -13,13 +13,13 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 
-@EventBusSubscriber(value = Dist.CLIENT, bus = EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber(value = Dist.CLIENT)
 public class WakeWorldTicker {
 
     @SubscribeEvent
     public static void onLevelTick(LevelTickEvent.Post event) {
         if (event.getLevel() instanceof ClientLevel clientLevel) {
-            WakesClient.areShadersEnabled = WakesClient.areShadersEnabled();
+            //WakesClient.areShadersEnabled = WakesClient.areShadersEnabled();
             WakesDebugInfo.reset();
 
             WakeHandler.getInstance(clientLevel).ifPresent(WakeHandler::tick);

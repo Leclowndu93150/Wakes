@@ -5,14 +5,9 @@ import com.leclowndu93150.wakes.particle.custom.SplashCloudParticle;
 import com.leclowndu93150.wakes.particle.custom.SplashPlaneParticle;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import java.util.function.Supplier;
 
 public class ModParticles {

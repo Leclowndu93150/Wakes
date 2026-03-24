@@ -4,27 +4,24 @@ import com.leclowndu93150.wakes.config.WakesConfig;
 import com.leclowndu93150.wakes.duck.ProducesWake;
 import com.leclowndu93150.wakes.particle.ModParticles;
 import com.leclowndu93150.wakes.particle.WithOwnerParticleType;
+import com.leclowndu93150.wakes.render.WakeColor;
 import com.leclowndu93150.wakes.simulation.SimulationNode;
 import com.leclowndu93150.wakes.simulation.WakeHandler;
 import com.leclowndu93150.wakes.utils.WakesUtils;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.*;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.BiomeColors;
-import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.util.LightCoordsUtil;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.vehicle.Boat;
+import net.minecraft.world.entity.vehicle.boat.AbstractBoat;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.system.MemoryUtil;
 
@@ -45,7 +42,6 @@ public class SplashPlaneParticle extends Particle {
 
     public boolean isRenderReady = false;
     public float lerpedYaw = 0;
-
 
     protected SplashPlaneParticle(ClientLevel world, double x, double y, double z) {
         super(world, x, y, z);
@@ -82,12 +78,12 @@ public class SplashPlaneParticle extends Particle {
         } else {
             this.remove();
         }
+        updateRenderReady();
     }
 
     private void aliveTick(ProducesWake wakeProducer) {
-        // Vec3d vel = wakeProducer.wakes$getNumericalVelocity(); // UNCOMMENT IF WEIRD SPLASH BEHAVIOR
         Vec3 vel = this.owner.getDeltaMovement();
-        if (this.owner instanceof Boat) {
+        if (this.owner instanceof AbstractBoat) {
             this.yaw = -this.owner.getYRot();
         } else {
             this.yaw = 90f - (float) (180f / Math.PI * Math.atan2(vel.z, vel.x));
@@ -128,11 +124,8 @@ public class SplashPlaneParticle extends Particle {
 
     public void populatePixels() {
         int fluidColor = BiomeColors.getAverageWaterColor(level, this.owner.blockPosition());
-        int lightCoordinate = LevelRenderer.getLightColor(level, this.owner.blockPosition());
-        int lightCol = Minecraft.getInstance().gameRenderer.lightTexture().lightPixels.getPixelRGBA(
-                LightTexture.block(lightCoordinate),
-                LightTexture.sky(lightCoordinate)
-        );
+        int lightCoordinate = LightCoordsUtil.pack(level.getBrightness(LightLayer.BLOCK, this.owner.blockPosition()), level.getBrightness(LightLayer.SKY, this.owner.blockPosition()));
+        int lightCol = WakeColor.computeLightColor(lightCoordinate);
         float opacity = WakesConfig.APPEARANCE.wakeOpacity.get().floatValue() * 0.9f;
         int res = WakeHandler.resolution.res;
         for (int r = 0; r < res; r++) {
@@ -144,8 +137,7 @@ public class SplashPlaneParticle extends Particle {
         this.hasPopulatedPixels = true;
     }
 
-    @Override
-    public void render(VertexConsumer vertexConsumer, Camera camera, float tickDelta) {
+    public void updateRenderReady() {
         this.isRenderReady = false;
         if (this.removed) return;
         if (Minecraft.getInstance().options.getCameraType().isFirstPerson() &&
@@ -153,21 +145,17 @@ public class SplashPlaneParticle extends Particle {
                 this.owner instanceof LocalPlayer) {
             return;
         }
-
-        float diff = this.yaw - this.prevYaw;
-        if (diff > 180f) {
-            diff -= 360;
-        } else if (diff < -180f) {
-            diff += 360;
-        }
-
-        this.lerpedYaw = (this.prevYaw + diff * tickDelta) % 360f;
         this.isRenderReady = true;
     }
 
-    public void translateMatrix(RenderLevelStageEvent context, PoseStack matrices) {
-        Vec3 cameraPos = context.getCamera().getPosition();
-        float tickDelta = context.getPartialTick().getGameTimeDeltaPartialTick(true);
+    public void translateMatrix(CameraRenderState camera, PoseStack matrices) {
+        Vec3 cameraPos = camera.pos;
+        float tickDelta = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(true);
+
+        float diff = this.yaw - this.prevYaw;
+        if (diff > 180f) diff -= 360;
+        else if (diff < -180f) diff += 360;
+        this.lerpedYaw = (this.prevYaw + diff * tickDelta) % 360f;
         float x = (float) (Mth.lerp(tickDelta, this.xo, this.x) - cameraPos.x());
         float y = (float) (Mth.lerp(tickDelta, this.yo, this.y) - cameraPos.y());
         float z = (float) (Mth.lerp(tickDelta, this.zo, this.z) - cameraPos.z());
@@ -180,11 +168,10 @@ public class SplashPlaneParticle extends Particle {
     }
 
     @Override
-    public ParticleRenderType getRenderType() {
-        return ParticleRenderType.CUSTOM;
+    public ParticleRenderType getGroup() {
+        return ParticleRenderType.NO_RENDER;
     }
 
-    @OnlyIn(Dist.CLIENT)
     public static class Factory implements ParticleProvider<SimpleParticleType> {
 
         public Factory(SpriteSet spriteSet) {
@@ -192,7 +179,7 @@ public class SplashPlaneParticle extends Particle {
 
         @Nullable
         @Override
-        public Particle createParticle(SimpleParticleType parameters, ClientLevel world, double x, double y, double z, double velX, double velY, double velZ) {
+        public Particle createParticle(SimpleParticleType parameters, ClientLevel world, double x, double y, double z, double velX, double velY, double velZ, net.minecraft.util.RandomSource random) {
             SplashPlaneParticle splashPlane = new SplashPlaneParticle(world, x, y, z);
             if (parameters instanceof WithOwnerParticleType type) {
                 splashPlane.owner = type.owner;

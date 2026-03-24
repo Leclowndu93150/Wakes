@@ -2,6 +2,9 @@ package com.leclowndu93150.wakes.render;
 
 import com.leclowndu93150.wakes.WakesClient;
 import com.leclowndu93150.wakes.config.WakesConfig;
+import net.minecraft.util.LightCoordsUtil;
+import net.minecraft.util.ARGB;
+
 import java.awt.*;
 
 public class WakeColor {
@@ -15,9 +18,7 @@ public class WakeColor {
     public final float s;
     public final float v;
 
-
     public WakeColor(int argb) {
-        // Minecraft seems to work with argb but OpenGL uses abgr
         this(argb >> 16 & 0xFF, argb >> 8 & 0xFF, argb & 0xFF, argb >> 24 & 0xFF);
     }
 
@@ -35,7 +36,7 @@ public class WakeColor {
     }
 
     public WakeColor(float hue, float saturation, float value, float opacity) {
-        this(((int)((1f - opacity) * 255)) << 24 ^ Color.HSBtoRGB(hue, saturation, value));
+        this(((int) ((1f - opacity) * 255)) << 24 ^ Color.HSBtoRGB(hue, saturation, value));
     }
 
     public WakeColor(String argbHex) {
@@ -49,6 +50,14 @@ public class WakeColor {
     private static double invertedLogisticCurve(float x) {
         float k = WakesConfig.APPEARANCE.shaderLightPassthrough.get().floatValue();
         return WakesClient.areShadersEnabled ? k * (4 * Math.pow(x - 0.5f, 3) + 0.5f) : x;
+    }
+
+    public static int computeLightColor(int lightCoordinate) {
+        float block = LightCoordsUtil.block(lightCoordinate) / 15f;
+        float sky = LightCoordsUtil.sky(lightCoordinate) / 15f;
+        float brightness = Math.max(block, sky);
+        int c = (int) (brightness * 255);
+        return ARGB.color(255, c, c, c);
     }
 
     public static int sampleColor(float waveEqAvg, int fluidCol, int lightColor, float opacity) {
@@ -68,14 +77,13 @@ public class WakeColor {
 
     public WakeColor blend(WakeColor tint, int lightColor, float opacity) {
         double srcA = Math.pow(this.a / 255f, WakesConfig.APPEARANCE.blendStrength.getAsDouble() * 10);
-        // Pow to make tint color have a larger influence
-        
+
         int r = (int) ((this.r) * (srcA) + (tint.r) * (1 - srcA));
         int g = (int) ((this.g) * (srcA) + (tint.g) * (1 - srcA));
         int b = (int) ((this.b) * (srcA) + (tint.b) * (1 - srcA));
 
-        r = (int) ((r * invertedLogisticCurve((lightColor       & 0xFF) / 255f)));
-        g = (int) ((g * invertedLogisticCurve((lightColor >> 8  & 0xFF) / 255f)));
+        r = (int) ((r * invertedLogisticCurve((lightColor & 0xFF) / 255f)));
+        g = (int) ((g * invertedLogisticCurve((lightColor >> 8 & 0xFF) / 255f)));
         b = (int) ((b * invertedLogisticCurve((lightColor >> 16 & 0xFF) / 255f)));
 
         return new WakeColor(r, g, b, (int) (this.a * opacity));

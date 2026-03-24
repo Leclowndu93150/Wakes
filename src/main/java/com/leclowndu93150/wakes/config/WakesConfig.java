@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.entity.EntityType;
 
@@ -236,8 +236,8 @@ public class WakesConfig {
     public static Set<Fluid> getFluidWhitelist() {
         if (fluidCache == null) {
             fluidCache = GENERAL.fluidWhitelist.get().stream()
-                    .map(ResourceLocation::parse)
-                    .map(BuiltInRegistries.FLUID::get)
+                    .map(Identifier::parse)
+                    .map(BuiltInRegistries.FLUID::getValue)
                     .collect(Collectors.toSet());
         }
         return fluidCache;
@@ -246,8 +246,8 @@ public class WakesConfig {
     public static Set<EntityType<?>> getMobBlacklist() {
         if (mobBlacklistCache == null) {
             mobBlacklistCache = GENERAL.mobBlacklist.get().stream()
-                    .map(ResourceLocation::parse)
-                    .map(BuiltInRegistries.ENTITY_TYPE::get)
+                    .map(Identifier::parse)
+                    .map(BuiltInRegistries.ENTITY_TYPE::getValue)
                     .collect(Collectors.toSet());
         }
         return mobBlacklistCache;

@@ -1,52 +1,55 @@
 package com.leclowndu93150.wakes.render;
 
-import com.leclowndu93150.wakes.render.enums.RenderType;
-import com.leclowndu93150.wakes.simulation.QuadTree;
+import com.leclowndu93150.wakes.WakesClient;
 import com.leclowndu93150.wakes.simulation.WakeHandler;
-import com.mojang.blaze3d.platform.GlConst;
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.platform.TextureUtil;
+import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
-import org.lwjgl.opengl.GL12;
-import org.lwjgl.opengl.GL14;
+import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.GpuTextureView;
+import com.mojang.blaze3d.textures.TextureFormat;
+import org.lwjgl.system.MemoryUtil;
 
 public class WakeTexture {
     public int res;
-    public int glTexId;
     public final boolean isUsingBricks;
     private final int resolutionScaling;
+    private final GpuTexture texture;
+    private final GpuTextureView textureView;
+    private final NativeImage image;
 
-    public WakeTexture(int res, boolean useBricks) {
+    public WakeTexture(int res, boolean useBricks, int scaling) {
         this.res = res;
-        this.glTexId = TextureUtil.generateTextureId();
         this.isUsingBricks = useBricks;
-        this.resolutionScaling = useBricks ? QuadTree.BRICK_WIDTH : 1;
+        this.resolutionScaling = scaling;
 
-        GlStateManager._bindTexture(glTexId);
-        GlStateManager._texParameter(GlConst.GL_TEXTURE_2D, GL12.GL_TEXTURE_MAX_LEVEL, 0);
-        GlStateManager._texParameter(GlConst.GL_TEXTURE_2D, GL12.GL_TEXTURE_MIN_LOD, 0);
-        GlStateManager._texParameter(GlConst.GL_TEXTURE_2D, GL12.GL_TEXTURE_MAX_LOD, 0);
-        GlStateManager._texParameter(GlConst.GL_TEXTURE_2D, GL14.GL_TEXTURE_LOD_BIAS, 0f);
-
-        GlStateManager._texParameter(GlConst.GL_TEXTURE_2D, GL12.GL_TEXTURE_MIN_FILTER, GL12.GL_NEAREST);
-        GlStateManager._texParameter(GlConst.GL_TEXTURE_2D, GL12.GL_TEXTURE_MAG_FILTER, GL12.GL_NEAREST);
-
-        GlStateManager._texImage2D(GlConst.GL_TEXTURE_2D, 0, GlConst.GL_RGBA, resolutionScaling * res, resolutionScaling * res, 0, GlConst.GL_RGBA, GlConst.GL_UNSIGNED_BYTE, null);
+        int dim = scaling * res;
+        this.image = new NativeImage(dim, dim, false);
+        this.texture = RenderSystem.getDevice().createTexture(
+                () -> WakesClient.MOD_ID + " wake texture",
+                GpuTexture.USAGE_COPY_DST | GpuTexture.USAGE_TEXTURE_BINDING,
+                TextureFormat.RGBA8, dim, dim, 1, 1);
+        this.textureView = RenderSystem.getDevice().createTextureView(this.texture);
     }
 
     public void loadTexture(long imgPtr) {
-        GlStateManager._bindTexture(glTexId);
-        GlStateManager._pixelStore(GlConst.GL_UNPACK_ROW_LENGTH, 0);
-        GlStateManager._pixelStore(GlConst.GL_UNPACK_SKIP_PIXELS, 0);
-        GlStateManager._pixelStore(GlConst.GL_UNPACK_SKIP_ROWS, 0);
-        GlStateManager._pixelStore(GlConst.GL_UNPACK_ALIGNMENT, 4);
-
         int dim = resolutionScaling * WakeHandler.resolution.res;
-        GlStateManager._texSubImage2D(GlConst.GL_TEXTURE_2D, 0,0,0,dim, dim, GlConst.GL_RGBA, GlConst.GL_UNSIGNED_BYTE, imgPtr);
+        for (int y = 0; y < dim; y++) {
+            for (int x = 0; x < dim; x++) {
+                long offset = 4L * ((long) y * dim + x);
+                int pixel = MemoryUtil.memGetInt(imgPtr + offset);
+                image.setPixelABGR(x, y, pixel);
+            }
+        }
+        RenderSystem.getDevice().createCommandEncoder().writeToTexture(this.texture, this.image);
+    }
 
-        RenderSystem.setShaderTexture(0, glTexId);
-        RenderSystem.setShader(RenderType.getProgram());
-        RenderSystem.enableDepthTest(); // Is it THIS simple? https://github.com/Goby56/wakes/issues/46
-        RenderSystem.disableCull();
+    public GpuTextureView getTextureView() {
+        return this.textureView;
+    }
+
+    public void close() {
+        this.image.close();
+        this.textureView.close();
+        this.texture.close();
     }
 }

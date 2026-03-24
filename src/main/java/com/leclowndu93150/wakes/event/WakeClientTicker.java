@@ -8,7 +8,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
 
-@EventBusSubscriber(bus =  EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber
 public class WakeClientTicker {
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Pre event) {

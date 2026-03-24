@@ -24,7 +24,6 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
 
 	@Shadow public abstract String toString();
 	@Shadow private Vec3 position;
-	@Shadow private Level level;
 
 	@Shadow public abstract double getX();
 
@@ -35,6 +34,8 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
 	@Shadow public abstract boolean isInLiquid();
 
 	@Shadow public abstract boolean isInWater();
+
+	@Shadow public abstract Level level();
 
 	@Unique private boolean onFluidSurface = false;
 	@Unique private Vec3 prevPosOnSurface = null;
@@ -93,38 +94,31 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
 		return this.splashPlane;
 	}
 
-	// TODO FIX PLAYER TELEPORTATION CAUSING LONG WAKES
-//	@Inject(at = @At("TAIL"), method = "teleport(Lnet/minecraft/server/world/ServerWorld;DDDLjava/util/Set;FF)Z")
-//	private void onTeleport(ServerWorld world, double destX, double destY, double destZ, Set<PositionFlag> flags, float yaw, float pitch, CallbackInfoReturnable<Boolean> cir) {
-//		this.setRecentlyTeleported(true);
-//		System.out.printf("%s wants to teleport\n", this);
-//	}
-
 	@Unique
 	private boolean onFluidSurface() {
 		AABB box = this.getBoundingBox();
 		double hitboxMaxY = box.maxY;
-		
+
 		BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
 		for (int y = (int) Math.floor(box.minY); y <= (int) Math.floor(hitboxMaxY); y++) {
 			blockPos.set(this.getX(), y, this.getZ());
-			FluidState fluidState = this.level.getFluidState(blockPos);
-			
+			FluidState fluidState = this.level().getFluidState(blockPos);
+
 			if (!fluidState.isEmpty() && WakesConfig.getFluidWhitelist().contains(fluidState.getType())) {
-				double fluidHeight = (float)blockPos.getY() + fluidState.getHeight(this.level, blockPos);
+				double fluidHeight = (float)blockPos.getY() + fluidState.getHeight(this.level(), blockPos);
 				return hitboxMaxY > fluidHeight;
 			}
 		}
-		
+
 		return false;
 	}
 
 	@Inject(at = @At("TAIL"), method = "tick")
 	private void tick(CallbackInfo info) {
-		if (!this.level.isClientSide) {
+		if (!this.level().isClientSide()) {
 			return;
 		}
-		
+
 		this.onFluidSurface = onFluidSurface();
 		Entity thisEntity = ((Entity) (Object) this);
 		Vec3 vel = this.calculateVelocity(thisEntity);
@@ -135,9 +129,8 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
 			return;
 		}
 
-
 		if (this.onFluidSurface && !this.hasRecentlyTeleported) {
-			this.wakeHeight = WakesUtils.getFluidLevel(this.level, thisEntity);
+			this.wakeHeight = WakesUtils.getFluidLevel(this.level(), thisEntity);
 
 			Vec3 currPos = new Vec3(thisEntity.getX(), this.wakeHeight, thisEntity.getZ());
 
@@ -163,8 +156,8 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
 		}
 	}
 
-	@Inject(at = @At("HEAD"), method = "moveTo(DDDFF)V")
-	private void onMoveTo(double x, double y, double z, float yaw, float pitch, CallbackInfo ci) {
+	@Inject(at = @At("HEAD"), method = "snapTo(DDDFF)V")
+	private void onSnapTo(double x, double y, double z, float yaw, float pitch, CallbackInfo ci) {
 		Vec3 currentPos = this.position;
 		Vec3 newPos = new Vec3(x, y, z);
 		if (currentPos.distanceToSqr(newPos) > 400) {
@@ -197,10 +190,9 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
 		EffectSpawningRule rule = WakesUtils.getEffectRuleFromSource(thisEntity);
 		if (rule.simulateWakes) {
 			if (this.wakeHeight == null)
-				this.wakeHeight = WakesUtils.getFluidLevel(this.level, thisEntity);
+				this.wakeHeight = WakesUtils.getFluidLevel(this.level(), thisEntity);
 			WakesUtils.placeFallSplash(((Entity) (Object) this));
 		}
-		// TODO ADD WAKE WHEN GETTING OUT OF WATER
 	}
 
 	@Unique
@@ -211,7 +203,7 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
 		}
 		if (rule.renderPlanes) {
 			if (this.splashPlane == null && this.horizontalNumericalVelocity > 1e-2) {
-				WakesUtils.spawnSplashPlane(this.level, thisEntity);
+				WakesUtils.spawnSplashPlane(this.level(), thisEntity);
 			}
 		}
 	}
@@ -223,5 +215,4 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
 		}
 		return this.prevPosOnSurface == null ? Vec3.ZERO : this.position.subtract(this.prevPosOnSurface);
 	}
-
 }

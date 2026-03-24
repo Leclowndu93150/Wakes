@@ -5,7 +5,7 @@ import com.leclowndu93150.wakes.utils.WakesUtils;
 import java.util.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.vehicle.Boat;
+import net.minecraft.world.entity.vehicle.boat.AbstractBoat;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
@@ -197,13 +197,13 @@ public class WakeNode {
             return pixelsToNodes(pixelsAffected, y, WakesConfig.GENERAL.splashStrength.get(), Math.abs(entity.getDeltaMovement().y));
         }
 
-        public static Set<WakeNode> rowingNodes(Boat boat, int y) {
+        public static Set<WakeNode> rowingNodes(AbstractBoat boat, int y) {
             Set<WakeNode> nodesAffected = new HashSet<>();
             double velocity = boat.getDeltaMovement().horizontalDistance();
             for (int i = 0; i < 2; i++) {
                 if (boat.getPaddleState(i)) {
                     double phase = boat.paddlePositions[i] % (2*Math.PI);
-                    if (Boat.PADDLE_SPEED / 2 <= phase && phase <= Boat.PADDLE_SOUND_TIME + Boat.PADDLE_SPEED) {
+                    if (AbstractBoat.PADDLE_SPEED / 2 <= phase && phase <= AbstractBoat.PADDLE_SOUND_TIME + AbstractBoat.PADDLE_SPEED) {
                         Vec3 rot = boat.getViewVector(1.0f);
                         double x = boat.getX() + (i == 1 ? -rot.z : rot.z);
                         double z = boat.getZ() + (i == 1 ? rot.x : -rot.x);

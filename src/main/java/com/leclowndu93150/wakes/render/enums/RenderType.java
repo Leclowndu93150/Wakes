@@ -1,41 +1,29 @@
 package com.leclowndu93150.wakes.render.enums;
 
-
 import com.leclowndu93150.wakes.WakesClient;
 import com.leclowndu93150.wakes.config.WakesConfig;
-import java.util.function.Supplier;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.ShaderInstance;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import net.minecraft.client.renderer.RenderPipelines;
 
 public enum RenderType {
     AUTO(null),
-    GENERAL(GameRenderer::getPositionColorTexLightmapShader),
-    CUSTOM(GameRenderer::getPositionTexColorShader),
-    SOLID(GameRenderer::getRendertypeSolidShader),
-    TRANSLUCENT(GameRenderer::getRendertypeTranslucentShader),
-    CUTOUT(GameRenderer::getRendertypeCutoutShader),
-    ENTITY_SOLID(GameRenderer::getRendertypeEntitySolidShader),
-    ENTITY_TRANSLUCENT(GameRenderer::getRendertypeEntityTranslucentShader),
-    ENTITY_TRANSLUCENT_CULL(GameRenderer::getRendertypeEntityTranslucentCullShader),
-    ENTITY_CUTOUT(GameRenderer::getRendertypeEntityCutoutShader),
-    ENTITY_CUTOUT_NO_CULL(GameRenderer::getRendertypeEntityCutoutNoCullShader),
-    ENTITY_CUTOUT_NO_CULL_Z_OFFSET(GameRenderer::getRendertypeEntityCutoutNoCullZOffsetShader)
-    ;
+    TRANSLUCENT_BLOCK(RenderPipelines.TRANSLUCENT_BLOCK),
+    BEACON_BEAM_TRANSLUCENT(RenderPipelines.BEACON_BEAM_TRANSLUCENT);
 
-    public final Supplier<ShaderInstance> program;
+    public final RenderPipeline pipeline;
 
-    RenderType(Supplier<ShaderInstance> program) {
-        this.program = program;
+    RenderType(RenderPipeline pipeline) {
+        this.pipeline = pipeline;
     }
 
-    public static Supplier<ShaderInstance> getProgram() {
+    public static RenderPipeline getPipeline() {
         if (WakesConfig.DEBUG.renderType.get() == RenderType.AUTO) {
             if (WakesClient.areShadersEnabled) {
-                return ENTITY_TRANSLUCENT_CULL.program;
+                return TRANSLUCENT_BLOCK.pipeline;
             } else {
-                return CUSTOM.program;
+                return BEACON_BEAM_TRANSLUCENT.pipeline;
             }
         }
-        return WakesConfig.DEBUG.renderType.get().program;
+        return WakesConfig.DEBUG.renderType.get().pipeline;
     }
 }
