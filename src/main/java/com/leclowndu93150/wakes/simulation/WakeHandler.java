@@ -1,5 +1,6 @@
 package com.leclowndu93150.wakes.simulation;
 
+import com.leclowndu93150.baguettelib.util.QueueSet;
 import com.leclowndu93150.wakes.config.WakesConfig;
 import com.leclowndu93150.wakes.config.enums.Resolution;
 import com.leclowndu93150.wakes.particle.custom.SplashPlaneParticle;

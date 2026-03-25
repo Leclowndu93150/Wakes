@@ -38,6 +38,7 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
 	@Shadow public abstract Level level();
 
 	@Unique private boolean onFluidSurface = false;
+	@Unique private boolean wasOnFluidSurface = false;
 	@Unique private Vec3 prevPosOnSurface = null;
 	@Unique private Vec3 numericalVelocity = Vec3.ZERO;
 	@Unique private double horizontalNumericalVelocity = 0;
@@ -119,6 +120,7 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
 			return;
 		}
 
+		this.wasOnFluidSurface = this.onFluidSurface;
 		this.onFluidSurface = onFluidSurface();
 		Entity thisEntity = ((Entity) (Object) this);
 		Vec3 vel = this.calculateVelocity(thisEntity);
@@ -138,6 +140,12 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
 
 			this.wakes$setPrevPos(currPos);
 		} else {
+			if (this.wasOnFluidSurface && this.wakeHeight != null) {
+				EffectSpawningRule rule = WakesUtils.getEffectRuleFromSource(thisEntity);
+				if (rule.simulateWakes) {
+					WakesUtils.placeFallSplash(thisEntity);
+				}
+			}
 			this.wakeHeight = null;
 			this.prevPosOnSurface = null;
 		}
