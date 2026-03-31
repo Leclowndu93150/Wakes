@@ -58,7 +58,6 @@ public class WakeRenderer {
         int n = 0;
         long tRendering = System.nanoTime();
 
-        GlStateManager.pushAttrib();
         GlStateManager.pushMatrix();
         GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);
         GlStateManager.disableTexture2D();
@@ -73,22 +72,18 @@ public class WakeRenderer {
         GlStateManager.disableLighting();
         GlStateManager.disableAlpha();
         GlStateManager.depthMask(false);
-        GL11.glEnable(GL11.GL_FOG);
+        GlStateManager.enableFog();
 
         for (Brick brick : bricks) {
             render(cx, cy, cz, brick, wakeTextures.get(resolution));
             n++;
         }
 
+        GlStateManager.disableFog();
         GlStateManager.depthMask(true);
         GlStateManager.enableAlpha();
-        GlStateManager.enableLighting();
         GlStateManager.disableBlend();
-        GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);
-        GlStateManager.enableTexture2D();
-        GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
         GlStateManager.popMatrix();
-        GlStateManager.popAttrib();
 
         WakesDebugInfo.renderingTime.add(System.nanoTime() - tRendering);
         WakesDebugInfo.quadsRendered = n;

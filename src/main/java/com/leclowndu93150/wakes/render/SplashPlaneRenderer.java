@@ -78,7 +78,6 @@ public class SplashPlaneRenderer {
             return;
         }
 
-        GlStateManager.pushAttrib();
         GlStateManager.pushMatrix();
         GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);
         GlStateManager.disableTexture2D();
@@ -93,7 +92,7 @@ public class SplashPlaneRenderer {
         GlStateManager.disableLighting();
         GlStateManager.disableAlpha();
         GlStateManager.depthMask(false);
-        GL11.glEnable(GL11.GL_FOG);
+        GlStateManager.enableFog();
 
         float x = (float) (MathHelper.clampedLerp(splashPlane.getPrevX(), splashPlane.getX(), partialTicks) - cx);
         float y = (float) (MathHelper.clampedLerp(splashPlane.getPrevY(), splashPlane.getY(), partialTicks) - cy);
@@ -110,15 +109,11 @@ public class SplashPlaneRenderer {
         wakeTextures.get(WakeHandler.resolution).loadTexture(splashPlane.imgBuffer);
         renderSurface();
 
+        GlStateManager.disableFog();
         GlStateManager.depthMask(true);
         GlStateManager.enableAlpha();
-        GlStateManager.enableLighting();
         GlStateManager.disableBlend();
-        GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);
-        GlStateManager.enableTexture2D();
-        GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
         GlStateManager.popMatrix();
-        GlStateManager.popAttrib();
     }
 
     private static void renderSurface() {
