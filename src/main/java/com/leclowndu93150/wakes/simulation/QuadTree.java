@@ -12,7 +12,7 @@ public class QuadTree {
     private static final int ROOT_WIDTH = (int) Math.pow(2, 26);
 
     private final QuadTree ROOT;
-    private List<QuadTree> children;
+    private QuadTree[] children;
 
     private final int bx, bz, bwidth;
     private final float by;
@@ -182,11 +182,12 @@ public class QuadTree {
         int x = this.bx;
         int z = this.bz;
         int w = this.bwidth >> 1;
-        children = new ArrayList<>();
-        children.add(new QuadTree(x, yLevel, z, w, depth + 1, this.ROOT));
-        children.add(new QuadTree(x + w, yLevel, z, w, depth + 1, this.ROOT));
-        children.add(new QuadTree(x, yLevel, z + w, w, depth + 1, this.ROOT));
-        children.add(new QuadTree(x + w, yLevel, z + w, w, depth + 1, this.ROOT));
+        children = new QuadTree[]{
+            new QuadTree(x, yLevel, z, w, depth + 1, this.ROOT),
+            new QuadTree(x + w, yLevel, z, w, depth + 1, this.ROOT),
+            new QuadTree(x, yLevel, z + w, w, depth + 1, this.ROOT),
+            new QuadTree(x + w, yLevel, z + w, w, depth + 1, this.ROOT)
+        };
     }
 
     public void prune() {
@@ -195,10 +196,6 @@ public class QuadTree {
                 tree.prune();
                 if (tree.hasLeaf()) tree.brick.deallocTexture();
             }
-            children.set(0, null);
-            children.set(1, null);
-            children.set(2, null);
-            children.set(3, null);
         }
         children = null;
     }

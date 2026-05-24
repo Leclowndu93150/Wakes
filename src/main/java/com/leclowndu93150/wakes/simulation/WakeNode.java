@@ -44,10 +44,9 @@ public class WakeNode {
 
     private WakeNode(long pos, int y) {
         this.simulationNode = new SimulationNode.WakeSimulation();
-        int[] xz = WakesUtils.longAsPos(pos);
-        this.x = xz[0];
+        this.x = (int) (pos >> 32);
         this.y = y;
-        this.z = xz[1];
+        this.z = (int) pos;
         this.floodLevel = WakesConfig.floodFillDistance;
     }
 
@@ -288,27 +287,22 @@ public class WakeNode {
 
         private static Set<WakeNode> pixelsToNodes(ArrayList<Long> pixelsAffected, int y, float waveStrength, double velocity) {
             int res = WakeHandler.resolution.res;
-            int power = (int) (Math.log(res) / Math.log(2));
+            int power = Integer.numberOfTrailingZeros(res);
             HashMap<Long, HashSet<Long>> pixelsInNodes = new HashMap<>();
-            for (Long pixel : pixelsAffected) {
-                int[] pos = WakesUtils.longAsPos(pixel);
-                long k = WakesUtils.posAsLong(pos[0] >> power, pos[1] >> power);
-                pos[0] %= res;
-                pos[1] %= res;
-                long v = WakesUtils.posAsLong(pos[0], pos[1]);
-                if (pixelsInNodes.containsKey(k)) {
-                    pixelsInNodes.get(k).add(v);
-                } else {
-                    HashSet<Long> set = new HashSet<>();
-                    set.add(v);
-                    pixelsInNodes.put(k, set);
-                }
+            for (int i = 0, size = pixelsAffected.size(); i < size; i++) {
+                long pixel = pixelsAffected.get(i);
+                int px = (int) (pixel >> 32);
+                int pz = (int) pixel;
+                long k = WakesUtils.posAsLong(px >> power, pz >> power);
+                long v = WakesUtils.posAsLong(px % res, pz % res);
+                pixelsInNodes.computeIfAbsent(k, ignored -> new HashSet<>()).add(v);
             }
+            int initialValue = (int) (waveStrength * velocity);
             Set<WakeNode> nodesAffected = new HashSet<>();
-            for (Long nodePos : pixelsInNodes.keySet()) {
-                WakeNode node = new WakeNode(nodePos, y);
-                for (Long subPos : pixelsInNodes.get(nodePos)) {
-                    node.simulationNode.setInitialValue(subPos, (int) (waveStrength * velocity));
+            for (Map.Entry<Long, HashSet<Long>> entry : pixelsInNodes.entrySet()) {
+                WakeNode node = new WakeNode(entry.getKey(), y);
+                for (Long subPos : entry.getValue()) {
+                    node.simulationNode.setInitialValue(subPos, initialValue);
                 }
                 nodesAffected.add(node);
             }

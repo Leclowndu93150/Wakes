@@ -50,7 +50,9 @@ public class WakeColor {
     }
 
     public static int sampleColor(float waveEqAvg, int fluidCol, int lightColor, float opacity) {
-        WakeColor tint = new WakeColor(fluidCol);
+        int tintR = fluidCol >> 16 & 0xFF;
+        int tintG = fluidCol >> 8 & 0xFF;
+        int tintB = fluidCol & 0xFF;
         double clampedRange = 1 / (1 + Math.exp(-0.1 * waveEqAvg));
         double[] ranges = WakesConfig.wakeColorIntervals;
         int returnIndex = ranges.length;
@@ -61,7 +63,23 @@ public class WakeColor {
             }
         }
         WakeColor color = WakesConfig.getWakeColor(returnIndex);
-        return color.blend(tint, lightColor, opacity).abgr;
+        return blendFast(color, tintR, tintG, tintB, lightColor, opacity);
+    }
+
+    private static int blendFast(WakeColor color, int tintR, int tintG, int tintB, int lightColor, float opacity) {
+        double srcA = Math.pow(color.a / 255f, WakesConfig.blendStrength * 10);
+        double invSrcA = 1 - srcA;
+
+        int r = (int) (color.r * srcA + tintR * invSrcA);
+        int g = (int) (color.g * srcA + tintG * invSrcA);
+        int b = (int) (color.b * srcA + tintB * invSrcA);
+
+        r = (int) (r * invertedLogisticCurve((lightColor & 0xFF) / 255f));
+        g = (int) (g * invertedLogisticCurve((lightColor >> 8 & 0xFF) / 255f));
+        b = (int) (b * invertedLogisticCurve((lightColor >> 16 & 0xFF) / 255f));
+
+        int a = (int) (color.a * opacity);
+        return a << 24 | b << 16 | g << 8 | r;
     }
 
     public WakeColor blend(WakeColor tint, int lightColor, float opacity) {

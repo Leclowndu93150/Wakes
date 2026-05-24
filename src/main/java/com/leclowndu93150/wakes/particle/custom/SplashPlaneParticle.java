@@ -12,7 +12,11 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityBoat;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.MobEffects;
+import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
@@ -156,6 +160,10 @@ public class SplashPlaneParticle extends Particle {
         float sunBrightness = world.getSunBrightness(1.0f);
         float effectiveSkyLight = skyLight * sunBrightness;
         float brightness = Math.max(effectiveSkyLight, blockLight) / 15f;
+        float nightVision = getNightVisionFactor();
+        if (nightVision > 0) {
+            brightness = Math.max(brightness, nightVision);
+        }
         int b = (int) (brightness * 255);
         int lightCol = 0xFF000000 | (b << 16) | (b << 8) | b;
         float opacity = (float) WakesConfig.wakeOpacity * 0.9f;
@@ -188,6 +196,17 @@ public class SplashPlaneParticle extends Particle {
 
         this.lerpedYaw = (this.prevYaw + diff * partialTicks) % 360f;
         this.isRenderReady = true;
+    }
+
+    private static float getNightVisionFactor() {
+        EntityPlayer player = Minecraft.getMinecraft().player;
+        if (player == null || !player.isPotionActive(MobEffects.NIGHT_VISION)) {
+            return 0;
+        }
+        PotionEffect effect = player.getActivePotionEffect(MobEffects.NIGHT_VISION);
+        if (effect == null) return 0;
+        int duration = effect.getDuration();
+        return duration > 200 ? 1.0f : 0.7f + MathHelper.sin(((float) duration) * (float) Math.PI * 0.2f) * 0.3f;
     }
 
     @Override

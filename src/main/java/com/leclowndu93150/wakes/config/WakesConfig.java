@@ -141,10 +141,20 @@ public class WakesConfig {
         return result;
     }
 
+    private static WakeColor[] wakeColorCache = null;
+    private static String[] wakeColorCacheKeys = null;
+
     public static WakeColor getWakeColor(int i) {
-        if (i >= 0 && i < wakeColors.length) {
-            return new WakeColor(wakeColors[i]);
+        if (i < 0 || i >= wakeColors.length) {
+            return new WakeColor(0);
         }
-        return new WakeColor(0);
+        if (wakeColorCache == null || wakeColorCache.length != wakeColors.length || !java.util.Arrays.equals(wakeColorCacheKeys, wakeColors)) {
+            wakeColorCacheKeys = wakeColors.clone();
+            wakeColorCache = new WakeColor[wakeColors.length];
+            for (int j = 0; j < wakeColors.length; j++) {
+                wakeColorCache[j] = new WakeColor(wakeColors[j]);
+            }
+        }
+        return wakeColorCache[i];
     }
 }

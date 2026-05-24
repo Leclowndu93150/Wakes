@@ -188,38 +188,44 @@ public class Brick {
 
         World world = Minecraft.getMinecraft().world;
         float nightVisionFactor = getNightVisionFactor();
+        float sunBrightness = world.getSunBrightness(1.0f);
+        double wakeOpacity = WakesConfig.wakeOpacity;
+        int rowStride = dim * texRes;
+        BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
+
         for (int z = 0; z < dim; z++) {
             for (int x = 0; x < dim; x++) {
-                WakeNode node = this.get(x, z);
-                int lightCol = 0xFFFFFFFF;
-                int fluidColor = 0;
-                float opacity = 0;
-                if (node != null) {
-                    BlockPos blockPos = node.blockPos();
-                    fluidColor = WaterTintUtils.getFluidColor(world, blockPos);
-                    int light = world.getCombinedLight(blockPos, 0);
-                    int skyLight = (light >> 20) & 0xF;
-                    int blockLight = (light >> 4) & 0xF;
-                    float sunBrightness = world.getSunBrightness(1.0f);
-                    float effectiveSkyLight = skyLight * sunBrightness;
-                    float brightness = Math.max(effectiveSkyLight, blockLight) / 15f;
-                    if (nightVisionFactor > 0) {
-                        brightness = Math.max(brightness, nightVisionFactor);
+                WakeNode node = nodes[z][x];
+                int nodeOffset = texRes * 4 * (z * rowStride + x);
+
+                if (node == null) {
+                    for (int r = 0; r < texRes; r++) {
+                        int pixelOffset = 4 * (r * rowStride);
+                        for (int c = 0; c < texRes; c++) {
+                            imgBuffer.putInt(nodeOffset + pixelOffset + c * 4, 0);
+                        }
                     }
-                    int b = (int) (brightness * 255);
-                    lightCol = 0xFF000000 | (b << 16) | (b << 8) | b;
-                    opacity = (float) ((-Math.pow(node.t, 2) + 1) * WakesConfig.wakeOpacity);
+                    continue;
                 }
 
-                int nodeOffset = texRes * 4 * ((z * dim * texRes) + x);
+                mutablePos.setPos(node.x, node.y, node.z);
+                int fluidColor = WaterTintUtils.getFluidColor(world, mutablePos);
+                int light = world.getCombinedLight(mutablePos, 0);
+                int skyLight = (light >> 20) & 0xF;
+                int blockLight = (light >> 4) & 0xF;
+                float brightness = Math.max(skyLight * sunBrightness, blockLight) / 15f;
+                if (nightVisionFactor > 0) {
+                    brightness = Math.max(brightness, nightVisionFactor);
+                }
+                int b = (int) (brightness * 255);
+                int lightCol = 0xFF000000 | (b << 16) | (b << 8) | b;
+                float opacity = (float) ((1 - node.t * node.t) * wakeOpacity);
+
+                SimulationNode sim = node.simulationNode;
                 for (int r = 0; r < texRes; r++) {
+                    int pixelOffset = 4 * (r * rowStride);
                     for (int c = 0; c < texRes; c++) {
-                        int color = 0;
-                        if (node != null) {
-                            color = node.simulationNode.getPixelColor(c, r, fluidColor, lightCol, opacity);
-                        }
-                        int pixelOffset = 4 * ((r * dim * texRes) + c);
-                        imgBuffer.putInt(nodeOffset + pixelOffset, color);
+                        imgBuffer.putInt(nodeOffset + pixelOffset + c * 4, sim.getPixelColor(c, r, fluidColor, lightCol, opacity));
                     }
                 }
             }

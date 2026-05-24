@@ -40,6 +40,7 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
     @Shadow public abstract boolean isInWater();
 
     @Unique private boolean wakes$onFluidSurface = false;
+    @Unique private boolean wakes$wasOnFluidSurface = false;
     @Unique private Vec3d wakes$prevPosOnSurface = null;
     @Unique private Vec3d wakes$numericalVelocity = Vec3d.ZERO;
     @Unique private double wakes$horizontalNumericalVelocity = 0;
@@ -165,6 +166,7 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
             return;
         }
 
+        this.wakes$wasOnFluidSurface = this.wakes$onFluidSurface;
         this.wakes$onFluidSurface = wakes$checkOnFluidSurface();
         Entity thisEntity = (Entity) (Object) this;
         Vec3d vel = this.wakes$calculateVelocity(thisEntity);
@@ -184,6 +186,12 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
 
             this.wakes$setPrevPos(currPos);
         } else {
+            if (this.wakes$wasOnFluidSurface && this.wakes$wakeHeightValue != null) {
+                EffectSpawningRule rule = WakesUtils.getEffectRuleFromSource(thisEntity);
+                if (rule.simulateWakes) {
+                    WakesUtils.placeFallSplash(thisEntity);
+                }
+            }
             this.wakes$wakeHeightValue = null;
             this.wakes$prevPosOnSurface = null;
         }

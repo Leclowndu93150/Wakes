@@ -203,23 +203,16 @@ public class WakesUtils {
     }
 
     public static int[] abgrInt2rgbaArr(int n) {
-        int[] arr = new int[4];
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 8; j++) {
-                arr[i] |= (n >> i * 8 + j & 1) << 7 - j;
-            }
-        }
-        return arr;
+        return new int[]{
+            n & 0xFF,
+            (n >> 8) & 0xFF,
+            (n >> 16) & 0xFF,
+            (n >> 24) & 0xFF
+        };
     }
 
     public static int rgbaArr2abgrInt(int[] arr) {
-        int n = 0;
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 8; j++) {
-                n |= (arr[i] >> j & 1) << i * 8 + j;
-            }
-        }
-        return n;
+        return (arr[0] & 0xFF) | ((arr[1] & 0xFF) << 8) | ((arr[2] & 0xFF) << 16) | ((arr[3] & 0xFF) << 24);
     }
 
     public static float getFluidLevel(World world, Entity entityInFluid) {

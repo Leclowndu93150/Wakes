@@ -74,10 +74,14 @@ public class WakeRenderer {
         GlStateManager.depthMask(false);
         GlStateManager.enableFog();
 
+        WakeTexture texture = wakeTextures.get(resolution);
+        GlStateManager.disableCull();
+        Tessellator tessellator = Tessellator.getInstance();
         for (Brick brick : bricks) {
-            render(cx, cy, cz, brick, wakeTextures.get(resolution));
+            renderBrick(cx, cy, cz, brick, texture, tessellator);
             n++;
         }
+        GlStateManager.enableCull();
 
         GlStateManager.disableFog();
         GlStateManager.depthMask(true);
@@ -89,32 +93,22 @@ public class WakeRenderer {
         WakesDebugInfo.quadsRendered = n;
     }
 
-    private static void render(double cx, double cy, double cz, Brick brick, WakeTexture texture) {
-        if (!brick.hasPopulatedPixels) return;
-        if (brick.imgBuffer == null) return;
+    private static void renderBrick(double cx, double cy, double cz, Brick brick, WakeTexture texture, Tessellator tessellator) {
+        if (!brick.hasPopulatedPixels || brick.imgBuffer == null) return;
 
         texture.loadTexture(brick.imgBuffer);
-
-        GlStateManager.disableCull();
 
         float px = (float) (brick.pos.x - cx);
         float py = (float) (brick.pos.y - cy + WakeNode.WATER_OFFSET);
         float pz = (float) (brick.pos.z - cz);
+        float dim = brick.dim;
 
-        Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
         buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-
-        buffer.pos(px, py, pz)
-                .tex(0, 0).endVertex();
-        buffer.pos(px, py, pz + brick.dim)
-                .tex(0, 1).endVertex();
-        buffer.pos(px + brick.dim, py, pz + brick.dim)
-                .tex(1, 1).endVertex();
-        buffer.pos(px + brick.dim, py, pz)
-                .tex(1, 0).endVertex();
-
+        buffer.pos(px, py, pz).tex(0, 0).endVertex();
+        buffer.pos(px, py, pz + dim).tex(0, 1).endVertex();
+        buffer.pos(px + dim, py, pz + dim).tex(1, 1).endVertex();
+        buffer.pos(px + dim, py, pz).tex(1, 0).endVertex();
         tessellator.draw();
-        GlStateManager.enableCull();
     }
 }
