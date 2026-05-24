@@ -1,0 +1,119 @@
+plugins {
+    id("dev.prism")
+}
+
+group = "com.leclowndu93150"
+version = "1.2.1"
+
+prism {
+    curseMaven()
+    modrinthMaven()
+    maven("Prism", "https://maven.leclowndu93150.dev/releases")
+    maven("Valkyrien Skies", "https://maven.valkyrienskies.org")
+
+    metadata {
+        modId = "wakes"
+        name = "Wakes"
+        description = "Wakes aims to add simple wakes that fit the spirit of vanilla"
+        license = "MIT"
+        author("Leclowndu93150")
+    }
+
+    version("1.20.1") {
+        parchmentMinecraftVersion = "1.20.1"
+        parchmentMappingsVersion = "2023.09.03"
+
+        publishingDependencies {
+            optional("valkyrien-skies")
+            optional("alekiships")
+        }
+
+        forge {
+            loaderVersion = "47.3.0"
+
+            dependencies {
+                modCompileOnly("curse.maven:oculus-581495:6020952")
+                modCompileOnly("curse.maven:embeddium-908741:5681725")
+                modCompileOnly("curse.maven:valkyrien-skies-258371:7377431")
+                modImplementation("curse.maven:kotlin-for-forge-351264:5402061")
+                modImplementation("curse.maven:alekiships-1068445:5963449")
+                compileOnly("org.joml:joml-primitives:1.10.0")
+            }
+
+            rawProject(Action {
+                dependencies {
+                    add("compileOnly", "org.valkyrienskies:valkyrienskies-120-forge:2.4.0") {
+                        exclude(group = "com.simibubi")
+                        exclude(group = "dev.engine-room")
+                        exclude(group = "com.jozufozu")
+                    }
+                    add("compileOnly", "org.valkyrienskies.core:api:1.1.0+e26d9059c0") {
+                        exclude(group = "org.joml")
+                    }
+                    add("compileOnly", "org.valkyrienskies.core:api-game:1.1.0+e26d9059c0") {
+                        exclude(group = "org.joml")
+                    }
+                    add("compileOnly", "org.valkyrienskies.core:util:1.1.0+e26d9059c0") {
+                        exclude(group = "org.joml")
+                    }
+                }
+            })
+        }
+    }
+
+    version("1.21.1") {
+        parchmentMinecraftVersion = "1.21.4"
+        parchmentMappingsVersion = "2025.02.16"
+
+        neoforge {
+            loaderVersion = "21.1.133"
+
+            dependencies {
+                compileOnly("curse.maven:irisshaders-455508:6213632")
+                implementation("curse.maven:sodium-394468:6211307")
+            }
+        }
+    }
+
+    version("26.1.2") {
+        publishingDependencies {
+            requires("baguettelib")
+        }
+
+        neoforge {
+            loaderVersion = "26.1.2.54-beta"
+
+            dependencies {
+                implementation("com.leclowndu93150.baguettelib:baguettelib-26.1.2-neoforge:2.0.4")
+                localJar("libs/eureka-forge-1201-1.6.0-beta.1+59032efd49.jar")
+            }
+        }
+    }
+
+    publishing {
+        changelog = """
+            ### Performance Improvements
+            Significant rendering performance gains — expect 30-50% less CPU time spent on wake rendering in busy scenes.
+
+            - Cached color hex parsing to avoid redundant string operations every frame
+            - Cached wave simulation parameters — no longer recalculated per-node per-tick
+            - Optimized wave propagation loop with hoisted array references, reducing redundant memory lookups
+            - Eliminated per-pixel object allocations in color blending, greatly reducing GC pressure
+            - Cached blend strength config read out of the inner rendering loop
+
+            These changes reduce frame drops when many wakes are active on screen.
+        """.trimIndent()
+
+        type = BETA
+
+        curseforge {
+            accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+            projectId = "1223529"
+        }
+
+        modrinth {
+            accessToken = providers.environmentVariable("MODRINTH_TOKEN")
+            projectId = "E0SdeAoH"
+        }
+    }
+}
