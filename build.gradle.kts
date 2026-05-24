@@ -66,7 +66,7 @@ prism {
         parchmentMinecraftVersion = "1.21.4"
         parchmentMappingsVersion = "2025.02.16"
 
-        version = "1.3.0"
+        version = "1.3.1"
 
         publishingDependencies {
             optional("sable")
@@ -108,7 +108,8 @@ prism {
 
     publishing {
         changelog = """
-            ### v1.3.0 for 1.21.1
+            ### v1.3.1 for 1.21.1
+            Made the mod not crash anymore on server
             Sable / Create Aeronautics compatibility — moving sub-levels leave ocean wakes, entities on sub-level water leave trail wakes rendered at the visual position
             
             ### v1.2.1
