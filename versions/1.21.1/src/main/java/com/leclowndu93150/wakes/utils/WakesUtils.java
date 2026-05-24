@@ -1,6 +1,8 @@
 package com.leclowndu93150.wakes.utils;
 
 import com.leclowndu93150.wakes.WakesClient;
+import com.leclowndu93150.wakes.compat.ModCompat;
+import com.leclowndu93150.wakes.compat.sable.SableCompat;
 import com.leclowndu93150.wakes.config.WakesConfig;
 import com.leclowndu93150.wakes.config.enums.EffectSpawningRule;
 import com.leclowndu93150.wakes.duck.ProducesWake;
@@ -85,7 +87,19 @@ public class WakesUtils {
         if (prevPos == null) {
             return;
         }
-        for (WakeNode node : WakeNode.Factory.thickNodeTrail(prevPos.x, prevPos.z, entity.getX(), entity.getZ(), y, WakesConfig.GENERAL.initialStrength.get(), velocity, entity.getBbWidth())) {
+
+        double toX = entity.getX();
+        double toZ = entity.getZ();
+        if (ModCompat.isSableLoaded()) {
+            Object subLevel = SableCompat.findSubLevelWithFluidUnder(entity);
+            if (subLevel != null) {
+                Vec3 localPos = SableCompat.toLocalPos(subLevel, entity.position());
+                toX = localPos.x;
+                toZ = localPos.z;
+            }
+        }
+
+        for (WakeNode node : WakeNode.Factory.thickNodeTrail(prevPos.x, prevPos.z, toX, toZ, y, WakesConfig.GENERAL.initialStrength.get(), velocity, entity.getBbWidth())) {
             wakeHandler.insert(node);
         }
     }

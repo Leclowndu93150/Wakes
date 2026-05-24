@@ -1,0 +1,13 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "com.leclowndu93150.wakes.mixin.sable",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "wakes.refmap.json",
+  "client": [
+    "SableLevelPlotMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 0
+  }
+}

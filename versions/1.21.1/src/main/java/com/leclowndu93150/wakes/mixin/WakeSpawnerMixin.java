@@ -1,5 +1,7 @@
 package com.leclowndu93150.wakes.mixin;
 
+import com.leclowndu93150.wakes.compat.ModCompat;
+import com.leclowndu93150.wakes.compat.sable.SableCompat;
 import com.leclowndu93150.wakes.config.WakesConfig;
 import com.leclowndu93150.wakes.config.enums.EffectSpawningRule;
 import com.leclowndu93150.wakes.particle.custom.SplashPlaneParticle;
@@ -44,6 +46,8 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
 	@Unique private Float wakeHeight = null;
 	@Unique private SplashPlaneParticle splashPlane;
 	@Unique private boolean hasRecentlyTeleported = false;
+	@Unique private Object activeSubLevel = null;
+	@Unique private Vec3 currentLocalPos = null;
 
 	@Override
 	public boolean wakes$onFluidSurface() {
@@ -103,20 +107,30 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
 
 	@Unique
 	private boolean onFluidSurface() {
+		this.activeSubLevel = null;
+
 		AABB box = this.getBoundingBox();
 		double hitboxMaxY = box.maxY;
-		
+
 		BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
 		for (int y = (int) Math.floor(box.minY); y <= (int) Math.floor(hitboxMaxY); y++) {
 			blockPos.set(this.getX(), y, this.getZ());
 			FluidState fluidState = this.level.getFluidState(blockPos);
-			
+
 			if (!fluidState.isEmpty() && WakesConfig.getFluidWhitelist().contains(fluidState.getType())) {
 				double fluidHeight = (float)blockPos.getY() + fluidState.getHeight(this.level, blockPos);
-				return hitboxMaxY > fluidHeight;
+				if (hitboxMaxY > fluidHeight) return true;
 			}
 		}
-		
+
+		if (ModCompat.isSableLoaded()) {
+			Object subLevel = SableCompat.findSubLevelWithFluidUnder((Entity) (Object) this);
+			if (subLevel != null) {
+				this.activeSubLevel = subLevel;
+				return true;
+			}
+		}
+
 		return false;
 	}
 
@@ -138,11 +152,19 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
 		}
 
 		if (this.onFluidSurface && !this.hasRecentlyTeleported) {
-			this.wakeHeight = WakesUtils.getFluidLevel(this.level, thisEntity);
+			Vec3 currPos;
+			if (this.activeSubLevel != null && ModCompat.isSableLoaded()) {
+				this.wakeHeight = SableCompat.getLocalFluidLevel(this.activeSubLevel, this.level, thisEntity);
+				Vec3 localPos = SableCompat.toLocalPos(this.activeSubLevel, thisEntity.position());
+				currPos = new Vec3(localPos.x, this.wakeHeight, localPos.z);
+			} else {
+				this.wakeHeight = WakesUtils.getFluidLevel(this.level, thisEntity);
+				currPos = new Vec3(thisEntity.getX(), this.wakeHeight, thisEntity.getZ());
+			}
 
-			Vec3 currPos = new Vec3(thisEntity.getX(), this.wakeHeight, thisEntity.getZ());
-
+			this.currentLocalPos = currPos;
 			this.spawnEffects(thisEntity);
+			this.currentLocalPos = null;
 
 			this.wakes$setPrevPos(currPos);
 		} else {
@@ -224,6 +246,10 @@ public abstract class WakeSpawnerMixin implements ProducesWake {
 
 	@Unique
 	private Vec3 calculateVelocity(Entity thisEntity) {
+		if (this.activeSubLevel != null && ModCompat.isSableLoaded()) {
+			Vec3 localPos = SableCompat.toLocalPos(this.activeSubLevel, thisEntity.position());
+			return this.prevPosOnSurface == null ? Vec3.ZERO : localPos.subtract(this.prevPosOnSurface);
+		}
 		if (thisEntity instanceof LocalPlayer) {
 			return thisEntity.getDeltaMovement();
 		}

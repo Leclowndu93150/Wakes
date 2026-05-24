@@ -219,45 +219,74 @@ public class WakeNode {
         }
 
         public static Set<WakeNode> nodeTrail(double fromX, double fromZ, double toX, double toZ, int y, float waveStrength, double velocity) {
-            int res = WakeHandler.resolution.res;
-            int x1 = (int) (fromX * res);
-            int z1 = (int) (fromZ * res);
-            int x2 = (int) (toX * res);
-            int z2 = (int) (toZ * res);
+            return nodeTrails(Collections.singletonList(new Trail(fromX, fromZ, toX, toZ)), y, waveStrength, velocity);
+        }
 
+        public static Set<WakeNode> nodeTrails(Iterable<Trail> trails, int y, float waveStrength, double velocity) {
             ArrayList<Long> pixelsAffected = new ArrayList<>();
-            WakesUtils.bresenhamLine(x1, z1, x2, z2, pixelsAffected);
+            for (Trail trail : trails) {
+                addNodeTrailPixels(trail, pixelsAffected);
+            }
             return pixelsToNodes(pixelsAffected, y, waveStrength, velocity);
         }
 
+        private static void addNodeTrailPixels(Trail trail, ArrayList<Long> pixelsAffected) {
+            int res = WakeHandler.resolution.res;
+            int x1 = (int) (trail.fromX * res);
+            int z1 = (int) (trail.fromZ * res);
+            int x2 = (int) (trail.toX * res);
+            int z2 = (int) (trail.toZ * res);
+
+            WakesUtils.bresenhamLine(x1, z1, x2, z2, pixelsAffected);
+        }
+
         public static Set<WakeNode> thickNodeTrail(double fromX, double fromZ, double toX, double toZ, int y, float waveStrength, double velocity, float width) {
+            return thickNodeTrails(Collections.singletonList(new Trail(fromX, fromZ, toX, toZ)), y, waveStrength, velocity, width);
+        }
+
+        public static Set<WakeNode> thickNodeTrails(Iterable<Trail> trails, int y, float waveStrength, double velocity, float width) {
+            ArrayList<Long> pixelsAffected = new ArrayList<>();
+            for (Trail trail : trails) {
+                addThickTrailPixels(trail, width, pixelsAffected);
+            }
+            return pixelsToNodes(pixelsAffected, y, waveStrength, velocity);
+        }
+
+        private static void addThickTrailPixels(Trail trail, float width, ArrayList<Long> pixelsAffected) {
             // Skip wake generation for very large distances (likely teleports)
-            double distanceSq = (toX - fromX) * (toX - fromX) + (toZ - fromZ) * (toZ - fromZ);
+            double distanceSq = (trail.toX - trail.fromX) * (trail.toX - trail.fromX) + (trail.toZ - trail.fromZ) * (trail.toZ - trail.fromZ);
             if (distanceSq > 400) { // 20 blocks squared
-                return new HashSet<>();
+                return;
             }
 
             int res = WakeHandler.resolution.res;
-            int x1 = (int) (fromX * res);
-            int z1 = (int) (fromZ * res);
-            int x2 = (int) (toX * res);
-            int z2 = (int) (toZ * res);
-            int w = (int) (0.8 * width * res / 2);
+            int x1 = (int) (trail.fromX * res);
+            int z1 = (int) (trail.fromZ * res);
+            int x2 = (int) (trail.toX * res);
+            int z2 = (int) (trail.toZ * res);
+            int w = Math.max(1, (int) (0.8 * width * res / 2));
 
             // TODO MAKE MORE EFFICIENT THICK LINE DRAWER
-            float len = (float) Math.sqrt(Math.pow(z1 - z2, 2) + Math.pow(x2 - x1, 2));
+            double len = Math.sqrt(Math.pow(z1 - z2, 2) + Math.pow(x2 - x1, 2));
 
             if (len > 1000) { // Arbitrary limit for pixel operations
-                return new HashSet<>();
+                return;
             }
 
-            float nx = (z1 - z2) / len;
-            float nz = (x2 - x1) / len;
-            ArrayList<Long> pixelsAffected = new ArrayList<>();
+            if (len <= 0.0) {
+                for (int dx = -w; dx < w; dx++) {
+                    for (int dz = -w; dz < w; dz++) {
+                        pixelsAffected.add(WakesUtils.posAsLong(x1 + dx, z1 + dz));
+                    }
+                }
+                return;
+            }
+
+            double nx = (z1 - z2) / len;
+            double nz = (x2 - x1) / len;
             for (int i = -w; i < w; i++) {
                 WakesUtils.bresenhamLine((int) (x1 + nx * i), (int) (z1 + nz * i), (int) (x2 + nx * i), (int) (z2 + nz * i), pixelsAffected);
             }
-            return pixelsToNodes(pixelsAffected, y, waveStrength, velocity);
         }
 
         public static Set<WakeNode> nodeLine(double x, int y, double z, float waveStrength, Vec3 velocity, float width) {
@@ -277,7 +306,7 @@ public class WakeNode {
             return pixelsToNodes(pixelsAffected, y, waveStrength, velocity.horizontalDistance());
         }
 
-        private static Set<WakeNode> pixelsToNodes(ArrayList<Long> pixelsAffected, int y, float waveStrength, double velocity) {
+        private static Set<WakeNode> pixelsToNodes(Iterable<Long> pixelsAffected, int y, float waveStrength, double velocity) {
             int res = WakeHandler.resolution.res;
             int power = (int) (Math.log(res) / Math.log(2));
             HashMap<Long, HashSet<Long>> pixelsInNodes = new HashMap<>();
@@ -304,6 +333,20 @@ public class WakeNode {
                 nodesAffected.add(node);
             }
             return nodesAffected;
+        }
+
+        public static class Trail {
+            public final double fromX;
+            public final double fromZ;
+            public final double toX;
+            public final double toZ;
+
+            public Trail(double fromX, double fromZ, double toX, double toZ) {
+                this.fromX = fromX;
+                this.fromZ = fromZ;
+                this.toX = toX;
+                this.toZ = toZ;
+            }
         }
     }
 }

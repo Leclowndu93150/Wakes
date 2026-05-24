@@ -10,6 +10,7 @@ prism {
     modrinthMaven()
     maven("Prism", "https://maven.leclowndu93150.dev/releases")
     maven("Valkyrien Skies", "https://maven.valkyrienskies.org")
+    maven("Sable Companion", "https://maven.ryanhcode.dev/releases")
 
     metadata {
         modId = "wakes"
@@ -65,12 +66,27 @@ prism {
         parchmentMinecraftVersion = "1.21.4"
         parchmentMappingsVersion = "2025.02.16"
 
+        version = "1.3.0"
+
+        publishingDependencies {
+            optional("sable")
+            optional("create-aeronautics")
+            optional("create")
+        }
+
         neoforge {
-            loaderVersion = "21.1.133"
+            loaderVersion = "21.1.219"
 
             dependencies {
                 compileOnly("curse.maven:irisshaders-455508:6213632")
                 implementation("curse.maven:sodium-394468:6211307")
+                compileOnly("curse.maven:sable-1312371:8007005")
+                runtimeOnly("curse.maven:sable-1312371:8007005")
+                compileOnly("dev.ryanhcode.sable-companion:sable-companion-common-1.21.1:1.6.0")
+                compileOnly("maven.modrinth:create-aeronautics:1.2.1+mc1.21.1")
+                runtimeOnly("maven.modrinth:create-aeronautics:1.2.1+mc1.21.1")
+                compileOnly("curse.maven:create-328085:7963363")
+                runtimeOnly("curse.maven:create-328085:7963363")
             }
         }
     }
@@ -92,13 +108,17 @@ prism {
 
     publishing {
         changelog = """
-            ### New Features
+            ### v1.3.0 for 1.21.1
+            Sable / Create Aeronautics compatibility — moving sub-levels leave ocean wakes, entities on sub-level water leave trail wakes rendered at the visual position
+            
+            ### v1.2.1
+            ## New Features
             - Entities now create a splash wake when exiting water
 
-            ### Bug Fixes
+            ## Bug Fixes
             - Fixed crash with Colorful Lighting / Sodium Compat (#12)
 
-            ### Performance Improvements
+            ## Performance Improvements
             Significant rendering performance gains — expect 30-50% less CPU time spent on wake rendering in busy scenes.
 
             - Cached color hex parsing to avoid redundant string operations every frame
