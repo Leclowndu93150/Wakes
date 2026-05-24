@@ -92,6 +92,12 @@ prism {
 
     publishing {
         changelog = """
+            ### New Features
+            - Entities now create a splash wake when exiting water
+
+            ### Bug Fixes
+            - Fixed crash with Colorful Lighting / Sodium Compat (#12)
+
             ### Performance Improvements
             Significant rendering performance gains — expect 30-50% less CPU time spent on wake rendering in busy scenes.
 
@@ -104,7 +110,7 @@ prism {
             These changes reduce frame drops when many wakes are active on screen.
         """.trimIndent()
 
-        type = BETA
+        type = STABLE
 
         curseforge {
             accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")

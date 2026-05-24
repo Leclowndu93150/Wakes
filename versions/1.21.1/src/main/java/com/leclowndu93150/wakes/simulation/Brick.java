@@ -199,10 +199,10 @@ public class Brick {
                 if (node != null) {
                     fluidColor = BiomeColors.getAverageWaterColor(world, node.blockPos());
                     int lightCoordinate = LevelRenderer.getLightColor(world, node.blockPos());
-                    lightCol = Minecraft.getInstance().gameRenderer.lightTexture().lightPixels.getPixelRGBA(
-                            LightTexture.block(lightCoordinate),
-                            LightTexture.sky(lightCoordinate)
-                    );
+                    int blockLight = Math.min(LightTexture.block(lightCoordinate), 15);
+                    int skyLight = Math.min(LightTexture.sky(lightCoordinate), 15);
+                    int c = Math.max(blockLight, skyLight) * 255 / 15;
+                    lightCol = 0xFF000000 | c << 16 | c << 8 | c;
                     // TODO LERP LIGHT FROM SURROUNDING BLOCKS
                     opacity = (float) ((-Math.pow(node.t, 2) + 1) * WakesConfig.APPEARANCE.wakeOpacity.get());
                 }
