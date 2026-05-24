@@ -2,6 +2,10 @@ package com.leclowndu93150.wakes.simulation;
 
 import com.leclowndu93150.wakes.config.WakesConfig;
 import com.leclowndu93150.wakes.utils.WakesUtils;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongIterator;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import java.util.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
@@ -186,7 +190,7 @@ public class WakeNode {
             int x = (int) (entity.getX() * res);
             int z = (int) (entity.getZ() * res);
 
-            ArrayList<Long> pixelsAffected = new ArrayList<>();
+            LongArrayList pixelsAffected = new LongArrayList();
             for (int i = -w; i < w; i++) {
                 for (int j = -w; j < w; j++) {
                     if (i*i + j*j < w*w) {
@@ -223,21 +227,21 @@ public class WakeNode {
         }
 
         public static Set<WakeNode> nodeTrails(Iterable<Trail> trails, int y, float waveStrength, double velocity) {
-            ArrayList<Long> pixelsAffected = new ArrayList<>();
+            LongArrayList pixelsAffected = new LongArrayList();
             for (Trail trail : trails) {
                 addNodeTrailPixels(trail, pixelsAffected);
             }
             return pixelsToNodes(pixelsAffected, y, waveStrength, velocity);
         }
 
-        private static void addNodeTrailPixels(Trail trail, ArrayList<Long> pixelsAffected) {
+        private static void addNodeTrailPixels(Trail trail, LongArrayList pixelsAffected) {
             int res = WakeHandler.resolution.res;
             int x1 = (int) (trail.fromX * res);
             int z1 = (int) (trail.fromZ * res);
             int x2 = (int) (trail.toX * res);
             int z2 = (int) (trail.toZ * res);
 
-            WakesUtils.bresenhamLine(x1, z1, x2, z2, pixelsAffected);
+            WakesUtils.bresenhamLine(x1, z1, x2, z2, pixelsAffected::add);
         }
 
         public static Set<WakeNode> thickNodeTrail(double fromX, double fromZ, double toX, double toZ, int y, float waveStrength, double velocity, float width) {
@@ -245,14 +249,14 @@ public class WakeNode {
         }
 
         public static Set<WakeNode> thickNodeTrails(Iterable<Trail> trails, int y, float waveStrength, double velocity, float width) {
-            ArrayList<Long> pixelsAffected = new ArrayList<>();
+            LongArrayList pixelsAffected = new LongArrayList();
             for (Trail trail : trails) {
                 addThickTrailPixels(trail, width, pixelsAffected);
             }
             return pixelsToNodes(pixelsAffected, y, waveStrength, velocity);
         }
 
-        private static void addThickTrailPixels(Trail trail, float width, ArrayList<Long> pixelsAffected) {
+        private static void addThickTrailPixels(Trail trail, float width, LongArrayList pixelsAffected) {
             // Skip wake generation for very large distances (likely teleports)
             double distanceSq = (trail.toX - trail.fromX) * (trail.toX - trail.fromX) + (trail.toZ - trail.fromZ) * (trail.toZ - trail.fromZ);
             if (distanceSq > 400) { // 20 blocks squared
@@ -267,7 +271,9 @@ public class WakeNode {
             int w = Math.max(1, (int) (0.8 * width * res / 2));
 
             // TODO MAKE MORE EFFICIENT THICK LINE DRAWER
-            double len = Math.sqrt(Math.pow(z1 - z2, 2) + Math.pow(x2 - x1, 2));
+            double lineDx = x2 - x1;
+            double lineDz = z1 - z2;
+            double len = Math.sqrt(lineDx * lineDx + lineDz * lineDz);
 
             if (len > 1000) { // Arbitrary limit for pixel operations
                 return;
@@ -285,7 +291,7 @@ public class WakeNode {
             double nx = (z1 - z2) / len;
             double nz = (x2 - x1) / len;
             for (int i = -w; i < w; i++) {
-                WakesUtils.bresenhamLine((int) (x1 + nx * i), (int) (z1 + nz * i), (int) (x2 + nx * i), (int) (z2 + nz * i), pixelsAffected);
+                WakesUtils.bresenhamLine((int) (x1 + nx * i), (int) (z1 + nz * i), (int) (x2 + nx * i), (int) (z2 + nz * i), pixelsAffected::add);
             }
         }
 
@@ -301,34 +307,36 @@ public class WakeNode {
             int x2 = (int) (x * res + nx * w);
             int z2 = (int) (z * res + nz * w);
 
-            ArrayList<Long> pixelsAffected = new ArrayList<>();
-            WakesUtils.bresenhamLine(x1, z1, x2, z2, pixelsAffected);
+            LongArrayList pixelsAffected = new LongArrayList();
+            WakesUtils.bresenhamLine(x1, z1, x2, z2, pixelsAffected::add);
             return pixelsToNodes(pixelsAffected, y, waveStrength, velocity.horizontalDistance());
         }
 
-        private static Set<WakeNode> pixelsToNodes(Iterable<Long> pixelsAffected, int y, float waveStrength, double velocity) {
+        private static Set<WakeNode> pixelsToNodes(LongArrayList pixelsAffected, int y, float waveStrength, double velocity) {
             int res = WakeHandler.resolution.res;
-            int power = (int) (Math.log(res) / Math.log(2));
-            HashMap<Long, HashSet<Long>> pixelsInNodes = new HashMap<>();
-            for (Long pixel : pixelsAffected) {
-                int[] pos = WakesUtils.longAsPos(pixel);
-                long k = WakesUtils.posAsLong(pos[0] >> power, pos[1] >> power);
-                pos[0] %= res;
-                pos[1] %= res;
-                long v = WakesUtils.posAsLong(pos[0], pos[1]);
-                if (pixelsInNodes.containsKey(k)) {
-                    pixelsInNodes.get(k).add(v);
-                } else {
-                    HashSet<Long> set = new HashSet<>();
-                    set.add(v);
-                    pixelsInNodes.put(k, set);
+            int power = WakeHandler.resolution.power;
+            Long2ObjectOpenHashMap<LongOpenHashSet> pixelsInNodes = new Long2ObjectOpenHashMap<>();
+            for (LongIterator iterator = pixelsAffected.iterator(); iterator.hasNext();) {
+                long pixel = iterator.nextLong();
+                int x = (int) (pixel >> 32);
+                int z = (int) pixel;
+                long k = WakesUtils.posAsLong(x >> power, z >> power);
+                long v = WakesUtils.posAsLong(x % res, z % res);
+                LongOpenHashSet subPixels = pixelsInNodes.get(k);
+                if (subPixels == null) {
+                    subPixels = new LongOpenHashSet();
+                    pixelsInNodes.put(k, subPixels);
                 }
+                subPixels.add(v);
             }
-            Set<WakeNode> nodesAffected = new HashSet<>();
-            for (Long nodePos : pixelsInNodes.keySet()) {
+
+            Set<WakeNode> nodesAffected = new HashSet<>(pixelsInNodes.size());
+            for (LongIterator nodePositions = pixelsInNodes.keySet().iterator(); nodePositions.hasNext();) {
+                long nodePos = nodePositions.nextLong();
                 WakeNode node = new WakeNode(nodePos, y);
-                for (Long subPos : pixelsInNodes.get(nodePos)) {
-                    node.simulationNode.setInitialValue(subPos, (int) (waveStrength * velocity));
+                LongIterator subPixels = pixelsInNodes.get(nodePos).iterator();
+                while (subPixels.hasNext()) {
+                    node.simulationNode.setInitialValue(subPixels.nextLong(), (int) (waveStrength * velocity));
                 }
                 nodesAffected.add(node);
             }

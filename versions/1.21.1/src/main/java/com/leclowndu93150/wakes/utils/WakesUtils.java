@@ -12,6 +12,7 @@ import com.leclowndu93150.wakes.simulation.WakeHandler;
 import com.leclowndu93150.wakes.simulation.WakeNode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.LongConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.player.RemotePlayer;
@@ -143,6 +144,10 @@ public class WakesUtils {
     }
 
     public static void bresenhamLine(int x1, int y1, int x2, int y2, ArrayList<Long> points) {
+        bresenhamLine(x1, y1, x2, y2, point -> points.add(point));
+    }
+
+    public static void bresenhamLine(int x1, int y1, int x2, int y2, LongConsumer points) {
         // https://www.youtube.com/watch?v=IDFB5CDpLDE credit
         // and of course Bresenham himself :P
         int dy = y2 - y1;
@@ -154,7 +159,7 @@ public class WakesUtils {
                 y2 = temp;
             }
             for (int y = y1; y < y2 + 1; y++) {
-                points.add(posAsLong(x1, y));
+                points.accept(posAsLong(x1, y));
             }
         } else {
             float k = (float) dy / dx;
@@ -172,7 +177,7 @@ public class WakesUtils {
                     y = y2;
                 }
                 for (int x = x1; x < x2 + 1; x++) {
-                    points.add(posAsLong(x, y));
+                    points.accept(posAsLong(x, y));
                     offset += delta;
                     if (offset >= threshold) {
                         y += adjust;
@@ -190,7 +195,7 @@ public class WakesUtils {
                     y2 = temp;
                 }
                 for (int y = y1; y < y2 + 1; y++) {
-                    points.add(posAsLong(x, y));
+                    points.accept(posAsLong(x, y));
                     offset += delta;
                     if (offset >= threshold) {
                         x += adjust;

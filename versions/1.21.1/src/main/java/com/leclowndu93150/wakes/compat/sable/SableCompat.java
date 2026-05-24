@@ -153,17 +153,13 @@ public class SableCompat {
                 currentWorldPositions.put(plotBlock, current);
 
                 Vec3 previous = state.prevWorldPositions.get(plotBlock);
-                Vec3 velocityPerTick = Sable.HELPER.getVelocity(level, subLevel, localCenter).scale(1.0 / 20.0);
-                contactHorizontalSpeed = Math.max(contactHorizontalSpeed, velocityPerTick.horizontalDistance());
-                contactVerticalSpeed = Math.max(contactVerticalSpeed, Math.abs(velocityPerTick.y));
                 if (previous == null) continue;
 
                 Vec3 displacement = current.subtract(previous);
-                Vec3 to = current.add(velocityPerTick.x, 0.0, velocityPerTick.z);
-                double speed = Math.max(displacement.horizontalDistance(), velocityPerTick.horizontalDistance());
-                contactHorizontalSpeed = Math.max(contactHorizontalSpeed, speed);
+                double speed = displacement.horizontalDistance();
+                if (speed < MIN_TRAIL_SPEED || previous.distanceToSqr(current) > MAX_TRAIL_DISTANCE_SQ) continue;
 
-                if (speed < MIN_TRAIL_SPEED || previous.distanceToSqr(to) > MAX_TRAIL_DISTANCE_SQ) continue;
+                contactHorizontalSpeed = Math.max(contactHorizontalSpeed, speed);
             }
 
             if (currentWorldPositions.isEmpty() && boundsTouchWaterPlane) {
@@ -180,8 +176,6 @@ public class SableCompat {
             nextWorldPositions.putAll(currentWorldPositions);
             double sweptHorizontalSpeed = insertSweptFootprintTrails(
                     wakeHandler,
-                    level,
-                    subLevel,
                     state.prevWorldPositions,
                     footprintPositions,
                     y,
@@ -250,7 +244,7 @@ public class SableCompat {
         if (localBounds == null) return HullScan.EMPTY;
 
         Pose3dc scanPose = getScanPose(subLevel);
-        AABB worldSlice = subLevel.boundingBox().toMojang().setMinY(worldWaterY).setMaxY(worldWaterY);
+        AABB worldSlice = waterSurfaceSlab(subLevel.boundingBox(), worldWaterY, WATERLINE_TOLERANCE);
         AABB localSlice = worldAabbToLocalAabb(worldSlice, scanPose).inflate(LOCAL_SCAN_INFLATE);
 
         ScanBounds scanBounds = clampScanBounds(localSlice, localBounds);
@@ -300,20 +294,12 @@ public class SableCompat {
         if (localBounds == null) return List.of();
 
         Pose3dc scanPose = getScanPose(subLevel);
-        AABB worldSlice = subLevel.boundingBox().toMojang().setMinY(worldWaterY).setMaxY(worldWaterY);
+        AABB worldSlice = waterSurfaceSlab(subLevel.boundingBox(), worldWaterY, maxDistanceFromWater);
         AABB localSlice = worldAabbToLocalAabb(worldSlice, scanPose).inflate(LOCAL_SCAN_INFLATE);
 
         ScanBounds scanBounds = clampScanBounds(localSlice, localBounds);
         if (scanBounds.minX > scanBounds.maxX || scanBounds.minZ > scanBounds.maxZ) return List.of();
-
-        scanBounds = new ScanBounds(
-                scanBounds.minX,
-                localBounds.minY(),
-                scanBounds.minZ,
-                scanBounds.maxX,
-                localBounds.maxY(),
-                scanBounds.maxZ
-        );
+        if (scanBounds.isEmpty()) return List.of();
 
         Map<Long, FootprintCandidate> candidates = new HashMap<>();
         BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
@@ -451,6 +437,10 @@ public class SableCompat {
         return new AABB(minX, minY, minZ, maxX, maxY, maxZ);
     }
 
+    private static AABB waterSurfaceSlab(BoundingBox3dc bounds, float worldWaterY, double halfHeight) {
+        return bounds.toMojang().setMinY(worldWaterY - halfHeight).setMaxY(worldWaterY + halfHeight);
+    }
+
     private static ScanBounds clampScanBounds(AABB localSlice, BoundingBox3i localBounds) {
         int minX = Math.max((int) Math.floor(localSlice.minX), localBounds.minX());
         int maxX = Math.min((int) Math.ceil(localSlice.maxX), localBounds.maxX());
@@ -458,11 +448,6 @@ public class SableCompat {
         int maxY = Math.min((int) Math.ceil(localSlice.maxY), localBounds.maxY());
         int minZ = Math.max((int) Math.floor(localSlice.minZ), localBounds.minZ());
         int maxZ = Math.min((int) Math.ceil(localSlice.maxZ), localBounds.maxZ());
-
-        if (minY > maxY) {
-            minY = localBounds.minY();
-            maxY = localBounds.maxY();
-        }
 
         return new ScanBounds(minX, minY, minZ, maxX, maxY, maxZ);
     }
@@ -507,7 +492,7 @@ public class SableCompat {
         }
     }
 
-    private static double insertSweptFootprintTrails(WakeHandler wakeHandler, Level level, SubLevel subLevel, Map<BlockPos, Vec3> previousPositions, Map<BlockPos, Vec3> currentPositions, int y, float strength) {
+    private static double insertSweptFootprintTrails(WakeHandler wakeHandler, Map<BlockPos, Vec3> previousPositions, Map<BlockPos, Vec3> currentPositions, int y, float strength) {
         List<WakeNode.Factory.Trail> trails = new ArrayList<>(currentPositions.size());
         double maxSpeed = 0.0;
 
@@ -517,13 +502,11 @@ public class SableCompat {
             if (previous == null) continue;
 
             Vec3 current = entry.getValue();
-            Vec3 velocityPerTick = Sable.HELPER.getVelocity(level, subLevel, Vec3.atCenterOf(plotBlock)).scale(1.0 / 20.0);
-            Vec3 to = current.add(velocityPerTick.x, 0.0, velocityPerTick.z);
-            double speed = Math.max(current.subtract(previous).horizontalDistance(), velocityPerTick.horizontalDistance());
-            if (speed < MIN_TRAIL_SPEED || previous.distanceToSqr(to) > MAX_TRAIL_DISTANCE_SQ) continue;
+            double speed = current.subtract(previous).horizontalDistance();
+            if (speed < MIN_TRAIL_SPEED || previous.distanceToSqr(current) > MAX_TRAIL_DISTANCE_SQ) continue;
 
             maxSpeed = Math.max(maxSpeed, speed);
-            trails.add(new WakeNode.Factory.Trail(previous.x, previous.z, to.x, to.z));
+            trails.add(new WakeNode.Factory.Trail(previous.x, previous.z, current.x, current.z));
         }
 
         if (trails.isEmpty()) return 0.0;
@@ -549,6 +532,9 @@ public class SableCompat {
             }
         }
 
+        surface = findFluidSurfaceOnBoundsPerimeter(level, bounds);
+        if (surface != null) return surface;
+
         BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
         int minX = (int) Math.floor(bounds.minX());
         int maxX = (int) Math.ceil(bounds.maxX());
@@ -561,6 +547,44 @@ public class SableCompat {
             for (int x = minX; x <= maxX; x++) {
                 for (int z = minZ; z <= maxZ; z++) {
                     blockPos.set(x, y, z);
+                    surface = getFluidSurface(level, blockPos);
+                    if (surface != null) return surface;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    private static FluidSurface findFluidSurfaceOnBoundsPerimeter(Level level, BoundingBox3dc bounds) {
+        BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
+        int minX = (int) Math.floor(bounds.minX());
+        int maxX = (int) Math.ceil(bounds.maxX());
+        int minY = (int) Math.floor(bounds.minY() - PROBE_BELOW);
+        int maxY = (int) Math.ceil(bounds.maxY() + 1.0);
+        int minZ = (int) Math.floor(bounds.minZ());
+        int maxZ = (int) Math.ceil(bounds.maxZ());
+
+        for (int y = maxY; y >= minY; y--) {
+            for (int x = minX; x <= maxX; x++) {
+                blockPos.set(x, y, minZ);
+                FluidSurface surface = getFluidSurface(level, blockPos);
+                if (surface != null) return surface;
+
+                if (maxZ != minZ) {
+                    blockPos.set(x, y, maxZ);
+                    surface = getFluidSurface(level, blockPos);
+                    if (surface != null) return surface;
+                }
+            }
+
+            for (int z = minZ + 1; z < maxZ; z++) {
+                blockPos.set(minX, y, z);
+                FluidSurface surface = getFluidSurface(level, blockPos);
+                if (surface != null) return surface;
+
+                if (maxX != minX) {
+                    blockPos.set(maxX, y, z);
                     surface = getFluidSurface(level, blockPos);
                     if (surface != null) return surface;
                 }
