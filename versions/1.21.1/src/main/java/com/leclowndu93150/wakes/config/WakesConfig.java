@@ -229,8 +229,19 @@ public class WakesConfig {
         }
     }
 
+    private static WakeColor[] wakeColorCache = null;
+    private static List<?> lastWakeColorsList = null;
+
     public static WakeColor getWakeColor(int i) {
-        return new WakeColor(APPEARANCE.wakeColors.get().get(i));
+        var current = APPEARANCE.wakeColors.get();
+        if (wakeColorCache == null || current != lastWakeColorsList) {
+            lastWakeColorsList = current;
+            wakeColorCache = new WakeColor[current.size()];
+            for (int j = 0; j < current.size(); j++) {
+                wakeColorCache[j] = new WakeColor(current.get(j));
+            }
+        }
+        return wakeColorCache[i];
     }
 
     public static Set<Fluid> getFluidWhitelist() {

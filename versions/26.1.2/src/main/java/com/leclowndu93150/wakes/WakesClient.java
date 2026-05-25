@@ -3,6 +3,7 @@ package com.leclowndu93150.wakes;
 import com.leclowndu93150.wakes.config.WakesConfig;
 import com.leclowndu93150.wakes.particle.ModParticles;
 import com.leclowndu93150.wakes.render.SplashPlaneRenderer;
+import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -11,7 +12,7 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Mod(WakesClient.MOD_ID)
+@Mod(value = WakesClient.MOD_ID, dist = Dist.CLIENT)
 public class WakesClient {
 
 	public static final String MOD_ID = "wakes";

@@ -6,6 +6,7 @@ import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.util.ARGB;
 
 import java.awt.*;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class WakeColor {
@@ -64,26 +65,57 @@ public class WakeColor {
 
     private static double cachedBlendStrength = -1;
     private static double cachedBlendExponent = -1;
+    private static double[] cachedSrcA;
+    private static double[] cachedInvSrcA;
+    private static List<?> cachedIntervals = null;
+    private static double[] cachedIntervalsArray;
+    private static int cachedIntervalsSize;
 
-    private static double getBlendExponent() {
+    private static void updateBlendCache() {
         double val = WakesConfig.APPEARANCE.blendStrength.getAsDouble();
         if (val != cachedBlendStrength) {
             cachedBlendStrength = val;
             cachedBlendExponent = val * 10;
+            cachedSrcA = new double[256];
+            cachedInvSrcA = new double[256];
+            for (int i = 0; i < 256; i++) {
+                cachedSrcA[i] = Math.pow(i / 255.0, cachedBlendExponent);
+                cachedInvSrcA[i] = 1.0 - cachedSrcA[i];
+            }
         }
-        return cachedBlendExponent;
+    }
+
+    private static void updateIntervalsCache() {
+        var intervals = WakesConfig.APPEARANCE.wakeColorIntervals.get();
+        if (intervals != cachedIntervals) {
+            cachedIntervals = intervals;
+            cachedIntervalsSize = intervals.size();
+            cachedIntervalsArray = new double[cachedIntervalsSize];
+            for (int i = 0; i < cachedIntervalsSize; i++) {
+                cachedIntervalsArray[i] = (Double) intervals.get(i);
+            }
+        }
+    }
+
+    private static double fastSigmoid(double x) {
+        double ax = 0.1 * x;
+        if (ax > 6) return 1.0;
+        if (ax < -6) return 0.0;
+        return 1.0 / (1.0 + Math.exp(-ax));
     }
 
     public static int sampleColor(float waveEqAvg, int fluidCol, int lightColor, float opacity) {
+        updateBlendCache();
+        updateIntervalsCache();
+
         int tintR = fluidCol >> 16 & 0xFF;
         int tintG = fluidCol >> 8 & 0xFF;
         int tintB = fluidCol & 0xFF;
 
-        double clampedRange = 1 / (1 + Math.exp(-0.1 * waveEqAvg));
-        var ranges = WakesConfig.APPEARANCE.wakeColorIntervals.get();
-        int returnIndex = ranges.size();
-        for (int i = 0; i < ranges.size(); i++) {
-            if (clampedRange < ranges.get(i)) {
+        double clampedRange = fastSigmoid(waveEqAvg);
+        int returnIndex = cachedIntervalsSize;
+        for (int i = 0; i < cachedIntervalsSize; i++) {
+            if (clampedRange < cachedIntervalsArray[i]) {
                 returnIndex = i;
                 break;
             }
@@ -93,8 +125,8 @@ public class WakeColor {
     }
 
     private static int blendFast(WakeColor color, int tintR, int tintG, int tintB, int lightColor, float opacity) {
-        double srcA = Math.pow(color.a / 255f, getBlendExponent());
-        double invSrcA = 1 - srcA;
+        double srcA = cachedSrcA[color.a];
+        double invSrcA = cachedInvSrcA[color.a];
 
         int r = (int) (color.r * srcA + tintR * invSrcA);
         int g = (int) (color.g * srcA + tintG * invSrcA);
@@ -108,18 +140,4 @@ public class WakeColor {
         return a << 24 | b << 16 | g << 8 | r;
     }
 
-    public WakeColor blend(WakeColor tint, int lightColor, float opacity) {
-        double srcA = Math.pow(this.a / 255f, getBlendExponent());
-        double invSrcA = 1 - srcA;
-
-        int r = (int) (this.r * srcA + tint.r * invSrcA);
-        int g = (int) (this.g * srcA + tint.g * invSrcA);
-        int b = (int) (this.b * srcA + tint.b * invSrcA);
-
-        r = (int) (r * invertedLogisticCurve((lightColor & 0xFF) / 255f));
-        g = (int) (g * invertedLogisticCurve((lightColor >> 8 & 0xFF) / 255f));
-        b = (int) (b * invertedLogisticCurve((lightColor >> 16 & 0xFF) / 255f));
-
-        return new WakeColor(r, g, b, (int) (this.a * opacity));
-    }
 }

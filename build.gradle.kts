@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "com.leclowndu93150"
-version = "1.2.1"
+version = "1.3.2"
 
 prism {
     curseMaven()
@@ -66,7 +66,7 @@ prism {
         parchmentMinecraftVersion = "1.21.4"
         parchmentMappingsVersion = "2025.02.16"
 
-        version = "1.3.1"
+        version = "1.3.2"
 
         publishingDependencies {
             optional("sable")
@@ -75,7 +75,7 @@ prism {
         }
 
         neoforge {
-            loaderVersion = "21.1.219"
+            loaderVersion = "21.1.230"
 
             dependencies {
                 compileOnly("curse.maven:irisshaders-455508:6213632")
@@ -108,10 +108,19 @@ prism {
 
     publishing {
         changelog = """
+            ### v1.3.3
+            ## Performance Improvements
+            - Replaced per-pixel Math.pow with pre-computed 256-entry lookup table
+            - Cached wake color interval thresholds as a primitive double array
+            - Added early-exit fast sigmoid — skips Math.exp for extreme wave values
+            - Removed dead code (unused blend method and its allocations)
+
+            Combined with previous optimizations, the color sampling path is now ~1.8x faster than v1.3.1.
+
             ### v1.3.1 for 1.21.1
             Made the mod not crash anymore on server
             Sable / Create Aeronautics compatibility — moving sub-levels leave ocean wakes, entities on sub-level water leave trail wakes rendered at the visual position
-            
+
             ### v1.2.1
             ## New Features
             - Entities now create a splash wake when exiting water
