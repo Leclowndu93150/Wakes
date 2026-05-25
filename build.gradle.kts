@@ -109,6 +109,9 @@ prism {
     publishing {
         changelog = """
             ### v1.3.3
+            ## Bug Fixes
+            - Fixed wakes growing infinitely when stationary in a boat
+
             ## Performance Improvements
             - Replaced per-pixel Math.pow with pre-computed 256-entry lookup table
             - Cached wake color interval thresholds as a primitive double array

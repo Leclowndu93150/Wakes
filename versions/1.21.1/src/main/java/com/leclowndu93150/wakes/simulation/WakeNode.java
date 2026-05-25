@@ -150,7 +150,6 @@ public class WakeNode {
 
     public void revive(WakeNode node) {
         this.age = 0;
-        this.floodLevel = WakesConfig.DEBUG.floodFillDistance.get();
         this.simulationNode.initialValues = node.simulationNode.initialValues;
     }
 
