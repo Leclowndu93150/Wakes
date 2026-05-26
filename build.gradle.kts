@@ -66,7 +66,7 @@ prism {
         parchmentMinecraftVersion = "1.21.4"
         parchmentMappingsVersion = "2025.02.16"
 
-        version = "1.3.2"
+        version = "1.3.4"
 
         publishingDependencies {
             optional("sable")
@@ -108,39 +108,7 @@ prism {
 
     publishing {
         changelog = """
-            ### v1.3.3
-            ## Bug Fixes
-            - Fixed wakes growing infinitely when stationary in a boat
-
-            ## Performance Improvements
-            - Replaced per-pixel Math.pow with pre-computed 256-entry lookup table
-            - Cached wake color interval thresholds as a primitive double array
-            - Added early-exit fast sigmoid — skips Math.exp for extreme wave values
-            - Removed dead code (unused blend method and its allocations)
-
-            Combined with previous optimizations, the color sampling path is now ~1.8x faster than v1.3.1.
-
-            ### v1.3.1 for 1.21.1
-            Made the mod not crash anymore on server
-            Sable / Create Aeronautics compatibility — moving sub-levels leave ocean wakes, entities on sub-level water leave trail wakes rendered at the visual position
-
-            ### v1.2.1
-            ## New Features
-            - Entities now create a splash wake when exiting water
-
-            ## Bug Fixes
-            - Fixed crash with Colorful Lighting / Sodium Compat (#12)
-
-            ## Performance Improvements
-            Significant rendering performance gains — expect 30-50% less CPU time spent on wake rendering in busy scenes.
-
-            - Cached color hex parsing to avoid redundant string operations every frame
-            - Cached wave simulation parameters — no longer recalculated per-node per-tick
-            - Optimized wave propagation loop with hoisted array references, reducing redundant memory lookups
-            - Eliminated per-pixel object allocations in color blending, greatly reducing GC pressure
-            - Cached blend strength config read out of the inner rendering loop
-
-            These changes reduce frame drops when many wakes are active on screen.
+            fix wake shape not updating when contraption is being modified (aeronautics)
         """.trimIndent()
 
         type = STABLE

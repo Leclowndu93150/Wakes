@@ -359,6 +359,11 @@ public class SableCompat {
     }
 
     private static BoundingBox3i computeLoadedPlotBounds(SubLevel subLevel) {
+        BoundingBox3ic plotBounds = subLevel.getPlot().getBoundingBox();
+        if (!isEmpty(plotBounds)) {
+            return new BoundingBox3i(plotBounds);
+        }
+
         BoundingBox3i bounds = null;
         BoundingBox3i chunkBounds = new BoundingBox3i();
         for (PlotChunkHolder chunk : subLevel.getPlot().getLoadedChunks()) {
@@ -378,6 +383,16 @@ public class SableCompat {
 
     private static long computeLoadedPlotSignature(SubLevel subLevel) {
         long signature = 1125899906842597L;
+        BoundingBox3ic plotBounds = subLevel.getPlot().getBoundingBox();
+        if (!isEmpty(plotBounds)) {
+            signature = signature * 31L + plotBounds.minX();
+            signature = signature * 31L + plotBounds.minY();
+            signature = signature * 31L + plotBounds.minZ();
+            signature = signature * 31L + plotBounds.maxX();
+            signature = signature * 31L + plotBounds.maxY();
+            signature = signature * 31L + plotBounds.maxZ();
+        }
+
         for (PlotChunkHolder chunk : subLevel.getPlot().getLoadedChunks()) {
             ChunkPos chunkPos = chunk.getPos();
             signature = signature * 31L + chunkPos.x;
@@ -397,6 +412,10 @@ public class SableCompat {
             signature = signature * 31L + bounds.maxZ();
         }
         return signature;
+    }
+
+    private static boolean isEmpty(BoundingBox3ic bounds) {
+        return bounds == null || bounds.minX() > bounds.maxX() || bounds.minY() > bounds.maxY() || bounds.minZ() > bounds.maxZ();
     }
 
     private static Pose3dc getScanPose(SubLevel subLevel) {

@@ -1,6 +1,7 @@
 package com.leclowndu93150.wakes.mixin.sable;
 
 import com.leclowndu93150.wakes.compat.sable.SableCompat;
+import dev.ryanhcode.sable.companion.math.BoundingBox3ic;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
@@ -12,6 +13,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class SableLevelPlotMixin {
     @Inject(method = "onBlockChange", at = @At("TAIL"), require = 0, remap = false)
     private void wakes$invalidateShape(BlockPos pos, BlockState state, CallbackInfo ci) {
+        SableCompat.invalidateShapeFromPlot(this);
+    }
+
+    @Inject(method = "setBoundingBox", at = @At("TAIL"), require = 0, remap = false)
+    private void wakes$invalidateShapeOnBoundsSync(BoundingBox3ic bounds, CallbackInfo ci) {
         SableCompat.invalidateShapeFromPlot(this);
     }
 }
