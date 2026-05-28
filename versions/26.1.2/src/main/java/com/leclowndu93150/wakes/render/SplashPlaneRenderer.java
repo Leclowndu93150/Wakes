@@ -26,9 +26,12 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -105,10 +108,25 @@ public class SplashPlaneRenderer {
 
         WakeTexture texture = wakeTextures.get(WakeHandler.resolution);
         texture.loadTexture(splashPlane.imgPtr);
-        renderSurface(matrix, texture);
+
+        int packedLight = computeEntityLight(entity);
+        renderSurface(matrix, texture, packedLight);
     }
 
-    private static void renderSurface(Matrix4f matrix, WakeTexture texture) {
+    private static int computeEntityLight(Entity entity) {
+        ClientLevel level = Minecraft.getInstance().level;
+        if (level == null) return LightCoordsUtil.FULL_BRIGHT;
+        BlockPos pos = entity.blockPosition();
+        if (!level.hasChunkAt(pos)) return LightCoordsUtil.FULL_BRIGHT;
+        int block = level.getBrightness(LightLayer.BLOCK, pos);
+        int sky = level.getBrightness(LightLayer.SKY, pos);
+        return LightCoordsUtil.pack(block, sky);
+    }
+
+    private static int currentLight = LightCoordsUtil.FULL_BRIGHT;
+
+    private static void renderSurface(Matrix4f matrix, WakeTexture texture, int packedLight) {
+        currentLight = packedLight;
         RenderPipeline pipeline = RenderType.getPipeline();
         BufferBuilder bb = Tesselator.getInstance().begin(pipeline.getVertexFormatMode(), pipeline.getVertexFormat());
 
@@ -159,6 +177,7 @@ public class SplashPlaneRenderer {
             RenderSystem.bindDefaultUniforms(pass);
             pass.setUniform("DynamicTransforms", dynamicTransforms);
             pass.bindTexture("Sampler0", texture.getTextureView(), sampler);
+            pass.bindTexture("Sampler2", client.gameRenderer.lightmap(), sampler);
             pass.setVertexBuffer(0, vertexBuffer);
             pass.setIndexBuffer(indexBuffer, indexType);
             pass.drawIndexed(0, 0, drawState.indexCount(), 1);
@@ -172,7 +191,7 @@ public class SplashPlaneRenderer {
                         (float) (vertex.z * WakesConfig.APPEARANCE.splashPlaneHeight.get()),
                         (float) (vertex.y * WakesConfig.APPEARANCE.splashPlaneDepth.get()))
                 .setUv((float) vertex.x, (float) vertex.y)
-                .setLight(LightCoordsUtil.FULL_BRIGHT)
+                .setLight(currentLight)
                 .setColor(1f, 1f, 1f, 1f)
                 .setNormal((float) normal.x, (float) normal.y, (float) normal.z);
     }

@@ -2,7 +2,6 @@ package com.leclowndu93150.wakes.simulation;
 
 import com.leclowndu93150.wakes.config.WakesConfig;
 import com.leclowndu93150.wakes.debug.WakesDebugInfo;
-import com.leclowndu93150.wakes.render.WakeColor;
 import net.minecraft.client.multiplayer.ClientLevel;
 import org.lwjgl.system.MemoryUtil;
 
@@ -13,9 +12,6 @@ import java.util.stream.Stream;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.client.renderer.culling.Frustum;
-import net.minecraft.util.LightCoordsUtil;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
@@ -195,14 +191,11 @@ public class Brick {
         for (int z = 0; z < dim; z++) {
             for (int x = 0; x < dim; x++) {
                 WakeNode node = this.get(x, z);
-                int lightCol = LightCoordsUtil.FULL_BRIGHT;
+                int lightCol = 0xFFFFFFFF;
                 int fluidColor = 0;
                 float opacity = 0;
                 if (node != null) {
                     fluidColor = BiomeColors.getAverageWaterColor(world, node.blockPos());
-                    int lightCoordinate = LightCoordsUtil.pack(world.getBrightness(LightLayer.BLOCK, node.blockPos()), world.getBrightness(LightLayer.SKY, node.blockPos()));
-                    lightCol = WakeColor.computeLightColor(lightCoordinate);
-                    // TODO LERP LIGHT FROM SURROUNDING BLOCKS
                     opacity = (float) ((-Math.pow(node.t, 2) + 1) * WakesConfig.APPEARANCE.wakeOpacity.get());
                 }
 

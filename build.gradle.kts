@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "com.leclowndu93150"
-version = "1.3.2"
+version = "1.3.5"
 
 prism {
     curseMaven()
@@ -66,7 +66,6 @@ prism {
         parchmentMinecraftVersion = "1.21.4"
         parchmentMappingsVersion = "2025.02.16"
 
-        version = "1.3.4"
 
         publishingDependencies {
             optional("sable")
@@ -108,7 +107,7 @@ prism {
 
     publishing {
         changelog = """
-            fix wake shape not updating when contraption is being modified (aeronautics)
+           fix broken lighting
         """.trimIndent()
 
         type = STABLE

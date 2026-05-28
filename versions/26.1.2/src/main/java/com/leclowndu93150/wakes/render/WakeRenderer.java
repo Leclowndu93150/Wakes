@@ -22,9 +22,12 @@ import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.LightCoordsUtil;
+import net.minecraft.core.BlockPos;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.util.LightCoordsUtil;
+import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -85,6 +88,9 @@ public class WakeRenderer {
         GpuBufferSlice dynamicTransforms = RenderSystem.getDynamicUniforms()
                 .writeTransform(RenderSystem.getModelViewMatrix(), new Vector4f(1f, 1f, 1f, 1f), new Vector3f(), new Matrix4f());
 
+        ClientLevel level = client.level;
+        BlockPos.MutableBlockPos lightPos = new BlockPos.MutableBlockPos();
+
         for (Brick brick : bricks) {
             if (!brick.hasPopulatedPixels) continue;
             texture.loadTexture(brick.imgPtr);
@@ -92,19 +98,27 @@ public class WakeRenderer {
             Vector3f pos = brick.pos.add(cameraPos.reverse()).toVector3f().add(0, WakeNode.WATER_OFFSET, 0);
             float dim = brick.dim;
 
+            int bx = (int) Math.floor(brick.pos.x);
+            int by = (int) Math.floor(brick.pos.y);
+            int bz = (int) Math.floor(brick.pos.z);
+            int light00 = lightAt(level, lightPos, bx, by, bz);
+            int light01 = lightAt(level, lightPos, bx, by, bz + (int) dim);
+            int light11 = lightAt(level, lightPos, bx + (int) dim, by, bz + (int) dim);
+            int light10 = lightAt(level, lightPos, bx + (int) dim, by, bz);
+
             BufferBuilder bb = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, pipeline.getVertexFormat());
             bb.addVertex(matrix, pos.x, pos.y, pos.z)
                     .setUv(0, 0).setColor(1f, 1f, 1f, 1f)
-                    .setLight(LightCoordsUtil.FULL_BRIGHT).setNormal(0f, 1f, 0f);
+                    .setLight(light00).setNormal(0f, 1f, 0f);
             bb.addVertex(matrix, pos.x, pos.y, pos.z + dim)
                     .setUv(0, 1).setColor(1f, 1f, 1f, 1f)
-                    .setLight(LightCoordsUtil.FULL_BRIGHT).setNormal(0f, 1f, 0f);
+                    .setLight(light01).setNormal(0f, 1f, 0f);
             bb.addVertex(matrix, pos.x + dim, pos.y, pos.z + dim)
                     .setUv(1, 1).setColor(1f, 1f, 1f, 1f)
-                    .setLight(LightCoordsUtil.FULL_BRIGHT).setNormal(0f, 1f, 0f);
+                    .setLight(light11).setNormal(0f, 1f, 0f);
             bb.addVertex(matrix, pos.x + dim, pos.y, pos.z)
                     .setUv(1, 0).setColor(1f, 1f, 1f, 1f)
-                    .setLight(LightCoordsUtil.FULL_BRIGHT).setNormal(0f, 1f, 0f);
+                    .setLight(light10).setNormal(0f, 1f, 0f);
 
             MeshData built = bb.buildOrThrow();
             GpuBuffer vertexBuffer = pipeline.getVertexFormat().uploadImmediateVertexBuffer(built.vertexBuffer());
@@ -131,5 +145,14 @@ public class WakeRenderer {
 
         WakesDebugInfo.renderingTime.add(System.nanoTime() - tRendering);
         WakesDebugInfo.quadsRendered = n;
+    }
+
+    private static int lightAt(ClientLevel level, BlockPos.MutableBlockPos pos, int x, int y, int z) {
+        if (level == null) return LightCoordsUtil.FULL_BRIGHT;
+        pos.set(x, y + 1, z);
+        if (!level.hasChunkAt(pos)) return LightCoordsUtil.FULL_BRIGHT;
+        int block = level.getBrightness(LightLayer.BLOCK, pos);
+        int sky = level.getBrightness(LightLayer.SKY, pos);
+        return LightCoordsUtil.pack(block, sky);
     }
 }

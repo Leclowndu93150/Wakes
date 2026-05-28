@@ -4,7 +4,6 @@ import com.leclowndu93150.wakes.config.WakesConfig;
 import com.leclowndu93150.wakes.duck.ProducesWake;
 import com.leclowndu93150.wakes.particle.ModParticles;
 import com.leclowndu93150.wakes.particle.WithOwnerParticleType;
-import com.leclowndu93150.wakes.render.WakeColor;
 import com.leclowndu93150.wakes.simulation.SimulationNode;
 import com.leclowndu93150.wakes.simulation.WakeHandler;
 import com.leclowndu93150.wakes.utils.WakesUtils;
@@ -14,8 +13,6 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.*;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.BiomeColors;
-import net.minecraft.util.LightCoordsUtil;
-import net.minecraft.world.level.LightLayer;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.util.Mth;
@@ -124,8 +121,7 @@ public class SplashPlaneParticle extends Particle {
 
     public void populatePixels() {
         int fluidColor = BiomeColors.getAverageWaterColor(level, this.owner.blockPosition());
-        int lightCoordinate = LightCoordsUtil.pack(level.getBrightness(LightLayer.BLOCK, this.owner.blockPosition()), level.getBrightness(LightLayer.SKY, this.owner.blockPosition()));
-        int lightCol = WakeColor.computeLightColor(lightCoordinate);
+        int lightCol = 0xFFFFFFFF;
         float opacity = WakesConfig.APPEARANCE.wakeOpacity.get().floatValue() * 0.9f;
         int res = WakeHandler.resolution.res;
         for (int r = 0; r < res; r++) {
