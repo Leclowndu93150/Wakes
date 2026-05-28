@@ -1,8 +1,6 @@
 package com.leclowndu93150.wakes.event;
 
 import com.leclowndu93150.wakes.WakesClient;
-import com.leclowndu93150.wakes.compat.ModCompat;
-import com.leclowndu93150.wakes.compat.sable.SableCompat;
 import com.leclowndu93150.wakes.simulation.WakeHandler;
 import com.leclowndu93150.wakes.debug.WakesDebugInfo;
 import net.minecraft.client.Minecraft;
@@ -24,9 +22,6 @@ public class WakeWorldTicker {
             WakesClient.areShadersEnabled = WakesClient.areShadersEnabled();
             WakesDebugInfo.reset();
 
-            if (ModCompat.isSableLoaded()) {
-                SableCompat.tickMovingSubLevelWakes(clientLevel);
-            }
             WakeHandler.getInstance(clientLevel).ifPresent(WakeHandler::tick);
         }
     }

@@ -5,7 +5,6 @@ import com.leclowndu93150.wakes.config.WakesConfig;
 import com.leclowndu93150.wakes.simulation.WakeHandler;
 import com.leclowndu93150.wakes.simulation.WakeNode;
 import dev.ryanhcode.sable.Sable;
-import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
 import dev.ryanhcode.sable.companion.ClientSubLevelAccess;
 import dev.ryanhcode.sable.companion.SubLevelAccess;
 import dev.ryanhcode.sable.companion.math.BoundingBox3i;
@@ -27,14 +26,15 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 public class SableCompat {
     private static final double PROBE_BELOW = 2.0;
+    private static final int NO_FLUID_RESCAN_INTERVAL = 10;
+    private static final double NO_FLUID_RESCAN_MOVE_SQ = 1.0;
+    private static final int STATE_PRUNE_AGE = 200;
     private static final int HULL_SCAN_INTERVAL = 20;
     private static final int SHAPE_SIGNATURE_INTERVAL = 40;
     private static final double LOCAL_SCAN_INFLATE = 0.35;
@@ -62,39 +62,49 @@ public class SableCompat {
 
     private static final Map<UUID, SubLevelWakeState> STATES = new HashMap<>();
 
-    public static void tickMovingSubLevelWakes(Level level) {
-        if (!ModCompat.isSableLoaded()) return;
+    public static void tickSubLevelWake(SubLevel subLevel) {
+        if (!ModCompat.isSableLoaded() || subLevel.isRemoved()) return;
+
+        Level level = subLevel.getLevel();
+        if (!level.isClientSide) return;
 
         WakeHandler wakeHandler = WakeHandler.getInstance(level).orElse(null);
         if (wakeHandler == null || WakesConfig.GENERAL.disableMod.get()) return;
 
-        SubLevelContainer container = SubLevelContainer.getContainer(level);
-        if (container == null) return;
+        UUID id = subLevel.getUniqueId();
+        if (id == null) return;
 
-        Set<UUID> seen = new HashSet<>();
         long gameTime = level.getGameTime();
+        pruneStaleStates(gameTime);
 
-        for (SubLevel subLevel : container.getAllSubLevels()) {
-            if (subLevel.isRemoved()) continue;
-            UUID id = subLevel.getUniqueId();
-            if (id == null) continue;
-            seen.add(id);
-
+        {
             BoundingBox3dc bounds = subLevel.boundingBox();
             SubLevelWakeState state = STATES.computeIfAbsent(id, k -> new SubLevelWakeState());
+            state.lastSeenTime = gameTime;
             double centerY = (bounds.minY() + bounds.maxY()) * 0.5;
             double subLevelVerticalSpeed = Double.isNaN(state.lastCenterY) ? 0.0 : Math.abs(centerY - state.lastCenterY);
             boolean shapeChanged = checkLoadedPlotShapeChanged(subLevel, state, gameTime);
 
+            double centerX = (bounds.minX() + bounds.maxX()) * 0.5;
+            double centerZ = (bounds.minZ() + bounds.maxZ()) * 0.5;
+            if (!state.touchingWater && gameTime < state.noFluidRescanTime
+                    && sqDist(centerX, centerZ, state.noFluidCenterX, state.noFluidCenterZ) < NO_FLUID_RESCAN_MOVE_SQ) {
+                state.lastCenterY = centerY;
+                return;
+            }
+
             FluidSurface surface = findFluidSurfaceInBounds(level, bounds);
             if (surface == null) {
+                state.noFluidRescanTime = gameTime + NO_FLUID_RESCAN_INTERVAL;
+                state.noFluidCenterX = centerX;
+                state.noFluidCenterZ = centerZ;
                 if (state.touchingWater && subLevelVerticalSpeed >= MIN_SPLASH_SPEED && !state.prevWorldPositions.isEmpty() && !Double.isNaN(state.lastWaterY)) {
                     insertConnectedFootprintNodes(wakeHandler, state.prevWorldPositions, (int) Math.floor(state.lastWaterY), WakesConfig.GENERAL.splashStrength.get(), subLevelVerticalSpeed);
                 }
                 state.touchingWater = false;
                 state.prevWorldPositions.clear();
                 state.lastCenterY = centerY;
-                continue;
+                return;
             }
 
             boolean justEnteredWater = !state.touchingWater;
@@ -121,7 +131,7 @@ public class SableCompat {
                     state.touchingWater = true;
                     state.lastWaterY = surface.height;
                     state.lastCenterY = centerY;
-                    continue;
+                    return;
                 }
 
                 if (state.touchingWater && subLevelVerticalSpeed >= MIN_SPLASH_SPEED && !state.prevWorldPositions.isEmpty()) {
@@ -132,7 +142,7 @@ public class SableCompat {
                 state.lastWaterY = surface.height;
                 state.lastCenterY = centerY;
                 state.prevWorldPositions.clear();
-                continue;
+                return;
             }
 
             int y = (int) Math.floor(surface.height);
@@ -193,8 +203,10 @@ public class SableCompat {
             state.lastWaterY = surface.height;
             state.lastCenterY = centerY;
         }
+    }
 
-        STATES.keySet().removeIf(id -> !seen.contains(id));
+    private static void pruneStaleStates(long gameTime) {
+        STATES.values().removeIf(state -> gameTime - state.lastSeenTime > STATE_PRUNE_AGE);
     }
 
     public static void invalidateShape(LevelPlot plot) {
@@ -536,7 +548,13 @@ public class SableCompat {
         return maxSpeed;
     }
 
-    @Nullable
+    private static double sqDist(double x1, double z1, double x2, double z2) {
+        if (Double.isNaN(x2) || Double.isNaN(z2)) return Double.POSITIVE_INFINITY;
+        double dx = x1 - x2;
+        double dz = z1 - z2;
+        return dx * dx + dz * dz;
+    }
+
     private static FluidSurface findFluidSurfaceInBounds(Level level, BoundingBox3dc bounds) {
         double centerX = (bounds.minX() + bounds.maxX()) * 0.5;
         double centerZ = (bounds.minZ() + bounds.maxZ()) * 0.5;
@@ -551,27 +569,7 @@ public class SableCompat {
             }
         }
 
-        surface = findFluidSurfaceOnBoundsPerimeter(level, bounds);
-        if (surface != null) return surface;
-
-        BlockPos.MutableBlockPos blockPos = new BlockPos.MutableBlockPos();
-        int minX = (int) Math.floor(bounds.minX());
-        int maxX = (int) Math.ceil(bounds.maxX());
-        int minY = (int) Math.floor(bounds.minY() - PROBE_BELOW);
-        int maxY = (int) Math.ceil(bounds.maxY() + 1.0);
-        int minZ = (int) Math.floor(bounds.minZ());
-        int maxZ = (int) Math.ceil(bounds.maxZ());
-
-        for (int y = maxY; y >= minY; y--) {
-            for (int x = minX; x <= maxX; x++) {
-                for (int z = minZ; z <= maxZ; z++) {
-                    blockPos.set(x, y, z);
-                    surface = getFluidSurface(level, blockPos);
-                    if (surface != null) return surface;
-                }
-            }
-        }
-        return null;
+        return findFluidSurfaceOnBoundsPerimeter(level, bounds);
     }
 
     @Nullable
@@ -736,6 +734,10 @@ public class SableCompat {
         double lastWaterY = Double.NaN;
         double lastCenterY = Double.NaN;
         boolean touchingWater = false;
+        long noFluidRescanTime = Long.MIN_VALUE;
+        double noFluidCenterX = Double.NaN;
+        double noFluidCenterZ = Double.NaN;
+        long lastSeenTime = Long.MIN_VALUE;
     }
 
     private static class HullScan {
