@@ -93,6 +93,26 @@ prism {
     version("26.1.2") {
         publishingDependencies {
             requires("baguettelib")
+            optional("forge-config-api-port")
+            optional("modmenu")
+        }
+
+        common {
+            dependencies {
+                compileOnly("maven.modrinth:forge-config-api-port:jUe0ucoE")
+                compileOnly("curse.maven:baguettelib-1264423:8010960")
+            }
+        }
+
+        fabric {
+            loaderVersion = "0.19.3"
+            fabricApi("0.152.1+26.1.2")
+
+            dependencies {
+                modImplementation("maven.modrinth:forge-config-api-port:jUe0ucoE")
+                modImplementation("curse.maven:baguettelib-1264423:8010960")
+                modImplementation("maven.modrinth:modmenu:p7gjPPpV")
+            }
         }
 
         neoforge {
@@ -100,14 +120,13 @@ prism {
 
             dependencies {
                 implementation("com.leclowndu93150.baguettelib:baguettelib-26.1.2-neoforge:2.0.4")
-                localJar("libs/eureka-forge-1201-1.6.0-beta.1+59032efd49.jar")
             }
         }
     }
 
     publishing {
         changelog = """
-           fix broken lighting
+
         """.trimIndent()
 
         type = STABLE

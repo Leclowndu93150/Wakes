@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "wakes",
+  "version": "${version}",
+  "name": "Wakes",
+  "description": "Wakes aims to add simple wakes that fit the spirit of vanilla",
+  "authors": ["Leclowndu93150"],
+  "license": "MIT",
+  "icon": "assets/wakes/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["com.leclowndu93150.wakes.WakesClientFabric"]
+  },
+  "mixins": [
+    {
+      "config": "wakes.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=0.17",
+    "fabric-api": "*",
+    "minecraft": "~26.1",
+    "java": ">=21",
+    "forgeconfigapiport": "*",
+    "baguettelib": "*"
+  },
+  "suggests": {
+    "modmenu": "*"
+  }
+}
