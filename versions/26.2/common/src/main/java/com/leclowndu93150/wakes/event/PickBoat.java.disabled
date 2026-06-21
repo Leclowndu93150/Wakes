@@ -1,0 +1,46 @@
+package com.leclowndu93150.wakes.event;
+
+import ;
+import com.leclowndu93150.wakes.config.WakesConfig;
+import net.fabricmc.fabric.api.event.client.player.ClientPickBlockGatherCallback;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.vehicle.Boat;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import java.util.Random;
+
+public class PickBoat implements ClientPickBlockGatherCallback {
+    @Override
+    public ItemStack pick(Player player, HitResult result) {
+        if (WakesConfig.pickBoat) {
+            if (player.pick(5, 0, false).getType().equals(HitResult.Type.BLOCK)) return ItemStack.EMPTY;
+            if (player.pick(5, 0, true) instanceof BlockHitResult fluidHit &&
+                    fluidHit.getType().equals(HitResult.Type.BLOCK)) {
+                if (player.level().getFluidState(fluidHit.getBlockPos()).is(Fluids.WATER)) {
+                    var boatTypes = Boat.Type.values();
+                    for (Boat.Type boatType : boatTypes) {
+                        ItemStack stack = getBoatFromType(boatType);
+                        if (player.getInventory().contains(stack)) {
+                            return stack;
+                        }
+                    }
+                    if (player.isCreative()) {
+                        int i = new Random().nextInt(boatTypes.length);
+                        return getBoatFromType(boatTypes[i]);
+                    }
+                }
+            }
+        }
+        return ItemStack.EMPTY;
+    }
+
+    private ItemStack getBoatFromType(Boat.Type type) {
+        String waterCraft = type == Boat.Type.BAMBOO ? "raft" : "boat";
+        return new ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.parse(type.toString() + "_" + waterCraft)));
+
+    }
+}

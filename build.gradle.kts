@@ -124,6 +124,40 @@ prism {
         }
     }
 
+    version("26.2") {
+        publishingDependencies {
+            requires("baguettelib")
+            optional("forge-config-api-port")
+            optional("modmenu")
+        }
+
+        common {
+            dependencies {
+                compileOnly("maven.modrinth:forge-config-api-port:86ROVP2H")
+                compileOnly("maven.modrinth:baguettelib:2eXYouke")
+            }
+        }
+
+        fabric {
+            loaderVersion = "0.19.3"
+            fabricApi("0.152.2+26.2")
+
+            dependencies {
+                modImplementation("maven.modrinth:forge-config-api-port:86ROVP2H")
+                modImplementation("maven.modrinth:baguettelib:2eXYouke")
+                modImplementation("maven.modrinth:modmenu:TLnEHUyx")
+            }
+        }
+
+        neoforge {
+            loaderVersion = "26.2.0.3-beta"
+
+            dependencies {
+                modImplementation("maven.modrinth:baguettelib:h4oVSDVz")
+            }
+        }
+    }
+
     publishing {
         changelog = """
 
