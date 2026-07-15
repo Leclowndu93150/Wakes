@@ -10,6 +10,7 @@ import com.leclowndu93150.wakes.particle.ModParticles;
 import com.leclowndu93150.wakes.platform.Services;
 import com.leclowndu93150.wakes.render.SplashPlaneRenderer;
 import com.leclowndu93150.wakes.render.WakeRenderer;
+import com.leclowndu93150.wakes.render.enums.WakesRenderType;
 import net.neoforged.fml.config.ModConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +25,7 @@ public final class WakesClient {
 
     public static void init() {
         Services.PLATFORM.registerConfig(ModConfig.Type.CLIENT, WakesConfig.CLIENT_SPEC, MOD_ID + "-client.toml");
+        Services.PLATFORM.registerPipeline(WakesRenderType.WAKE_TRANSLUCENT_LIT);
         ModParticles.register();
         SplashPlaneRenderer.init();
         Services.PLATFORM.registerClientLifecycle(SplashPlaneRenderer::setup);

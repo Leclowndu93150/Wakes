@@ -106,7 +106,7 @@ public class WakesPlatformFabric implements WakesPlatform {
 
     @Override
     public void registerLevelRenderAfterTranslucent(LevelRenderHook hook) {
-        LevelRenderEvents.AFTER_TRANSLUCENT_FEATURES.register(context -> hook.run(
+        LevelRenderEvents.COLLECT_SUBMITS.register(context -> hook.run(
                 context.submitNodeCollector(),
                 context.poseStack(),
                 context.levelState().cameraRenderState.cullFrustum,

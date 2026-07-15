@@ -3,7 +3,6 @@ package com.leclowndu93150.wakes.render;
 import com.leclowndu93150.wakes.config.WakesConfig;
 import com.leclowndu93150.wakes.duck.ProducesWake;
 import com.leclowndu93150.wakes.particle.custom.SplashPlaneParticle;
-import com.leclowndu93150.wakes.render.enums.WakesRenderType;
 import com.leclowndu93150.wakes.simulation.WakeHandler;
 import com.leclowndu93150.baguettelib.math.delaunay.DelaunayTriangulator;
 import com.leclowndu93150.baguettelib.math.delaunay.NotEnoughPointsException;
@@ -79,9 +78,9 @@ public class SplashPlaneRenderer {
         splashPlane.wakeTexture.loadTexture(splashPlane.imgPtr);
 
         final int packedLight = computeEntityLight(entity);
-        RenderType type = WakesRenderType.wakeRenderTypeFor(splashPlane.wakeTexture);
+        RenderType type = splashPlane.wakeTexture.renderType();
 
-        collector.submitCustomGeometry(poseStack, type, (pose, vc) -> {
+        WakeRenderer.submitAfterTerrain(collector, poseStack, type, (pose, vc) -> {
             currentLight = packedLight;
             for (int s = -1; s < 2; s++) {
                 if (s == 0) continue;
