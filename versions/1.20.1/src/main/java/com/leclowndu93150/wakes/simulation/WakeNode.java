@@ -237,11 +237,15 @@ public class WakeNode {
             }
 
             int res = WakeHandler.resolution.res;
-            int x1 = (int) (fromX * res);
-            int z1 = (int) (fromZ * res);
-            int x2 = (int) (toX * res);
-            int z2 = (int) (toZ * res);
+            int x1 = (int) Math.floor(fromX * res);
+            int z1 = (int) Math.floor(fromZ * res);
+            int x2 = (int) Math.floor(toX * res);
+            int z2 = (int) Math.floor(toZ * res);
             int w = (int) (0.8 * width * res / 2);
+
+            if (x1 == x2 && z1 == z2) {
+                return new HashSet<>();
+            }
 
             // Limit line length to prevent performance issues
             float len = (float) Math.sqrt(Math.pow(z1 - z2, 2) + Math.pow(x2 - x1, 2));
@@ -277,6 +281,9 @@ public class WakeNode {
         }
 
         private static Set<WakeNode> pixelsToNodes(ArrayList<Long> pixelsAffected, int y, float waveStrength, double velocity) {
+            if ((int) (waveStrength * velocity) < 1) {
+                return new HashSet<>();
+            }
             int res = WakeHandler.resolution.res;
             int power = (int) (Math.log(res) / Math.log(2));
             HashMap<Long, HashSet<Long>> pixelsInNodes = new HashMap<>();

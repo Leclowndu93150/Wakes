@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "com.leclowndu93150"
-version = "1.3.6"
+version = "1.3.7"
 
 prism {
     curseMaven()
@@ -160,7 +160,9 @@ prism {
 
     publishing {
         changelog = """
-
+        - Fixed a phantom block-sized wake that appeared near stationary boats (and at world spawn) after sitting still for a while, building up into flickering noise that never faded
+        - Wakes from entities that stop moving now fade out properly instead of staying stuck at full opacity
+        - Fixed wakes being misaligned by one pixel in negative coordinates
         """.trimIndent()
 
         type = STABLE

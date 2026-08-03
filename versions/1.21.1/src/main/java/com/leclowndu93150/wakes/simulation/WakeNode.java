@@ -263,27 +263,17 @@ public class WakeNode {
             }
 
             int res = WakeHandler.resolution.res;
-            int x1 = (int) (trail.fromX * res);
-            int z1 = (int) (trail.fromZ * res);
-            int x2 = (int) (trail.toX * res);
-            int z2 = (int) (trail.toZ * res);
+            int x1 = (int) Math.floor(trail.fromX * res);
+            int z1 = (int) Math.floor(trail.fromZ * res);
+            int x2 = (int) Math.floor(trail.toX * res);
+            int z2 = (int) Math.floor(trail.toZ * res);
             int w = Math.max(1, (int) (0.8 * width * res / 2));
 
-            // TODO MAKE MORE EFFICIENT THICK LINE DRAWER
             double lineDx = x2 - x1;
             double lineDz = z1 - z2;
             double len = Math.sqrt(lineDx * lineDx + lineDz * lineDz);
 
-            if (len > 1000) { // Arbitrary limit for pixel operations
-                return;
-            }
-
-            if (len <= 0.0) {
-                for (int dx = -w; dx < w; dx++) {
-                    for (int dz = -w; dz < w; dz++) {
-                        pixelsAffected.add(WakesUtils.posAsLong(x1 + dx, z1 + dz));
-                    }
-                }
+            if (len > 1000 || len <= 0.0) {
                 return;
             }
 
@@ -312,6 +302,9 @@ public class WakeNode {
         }
 
         private static Set<WakeNode> pixelsToNodes(LongArrayList pixelsAffected, int y, float waveStrength, double velocity) {
+            if ((int) (waveStrength * velocity) < 1) {
+                return new HashSet<>();
+            }
             int res = WakeHandler.resolution.res;
             int power = WakeHandler.resolution.power;
             Long2ObjectOpenHashMap<LongOpenHashSet> pixelsInNodes = new Long2ObjectOpenHashMap<>();
