@@ -21,6 +21,8 @@
   "wakes.configuration.mobSpawning.tooltip": "What effect should be visible when mobs move in water?",
   "wakes.configuration.itemSpawning": "Items",
   "wakes.configuration.itemSpawning.tooltip": "What effect should be visible when an item moves in water?",
+  "wakes.configuration.fishingBobberSpawning": "Fishing bobber",
+  "wakes.configuration.fishingBobberSpawning.tooltip": "What effect should be visible when a fishing bobber lands in water?",
 
   "wakes.configuration.wakeBehavior": "Wake Behavior",
   "wakes.configuration.wavePropagationFactor": "Wave propagation factor",

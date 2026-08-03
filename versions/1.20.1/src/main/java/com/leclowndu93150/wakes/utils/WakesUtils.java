@@ -23,6 +23,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.projectile.FishingHook;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.level.Level;
@@ -65,6 +66,8 @@ public class WakesUtils {
     }
 
     public static void placeWakeTrail(Entity entity) {
+        if (entity instanceof FishingHook) return;
+
         WakeHandler wakeHandler = WakeHandler.getInstance(entity.level()).orElse(null);
         if (wakeHandler == null) return;
 
@@ -166,6 +169,9 @@ public class WakesUtils {
                 return WakesConfig.GENERAL.otherPlayersSpawning.get();
             }
             return EffectSpawningRule.DISABLED;
+        }
+        if (source instanceof FishingHook) {
+            return WakesConfig.GENERAL.fishingBobberSpawning.get();
         }
         if (source instanceof LivingEntity) {
             return WakesConfig.GENERAL.mobSpawning.get();

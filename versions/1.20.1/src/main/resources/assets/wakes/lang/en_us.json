@@ -40,6 +40,8 @@
   "wakes.midnightconfig.mobSpawning.tooltip": "What effect should be visible when mobs moves in water?",
   "wakes.midnightconfig.itemSpawning": "Items",
   "wakes.midnightconfig.itemSpawning.tooltip": "What effect should be visible when an item moves in water?",
+  "wakes.midnightconfig.fishingBobberSpawning": "Fishing bobber",
+  "wakes.midnightconfig.fishingBobberSpawning.tooltip": "What effect should be visible when a fishing bobber lands in water?",
   "wakes.midnightconfig.wavePropagationFactor": "Wave propagation factor",
   "wakes.midnightconfig.wavePropagationFactor.tooltip": "The impact a pixels has on its neighboring pixels inside the wakes",
   "wakes.midnightconfig.waveDecayFactor": "Wave decay factor",

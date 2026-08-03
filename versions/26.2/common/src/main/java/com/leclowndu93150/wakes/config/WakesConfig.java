@@ -43,6 +43,7 @@ public class WakesConfig {
         public final ModConfigSpec.EnumValue<EffectSpawningRule> otherPlayersSpawning;
         public final ModConfigSpec.EnumValue<EffectSpawningRule> mobSpawning;
         public final ModConfigSpec.EnumValue<EffectSpawningRule> itemSpawning;
+        public final ModConfigSpec.EnumValue<EffectSpawningRule> fishingBobberSpawning;
 
         public final ModConfigSpec.DoubleValue wavePropagationFactor;
         public final ModConfigSpec.DoubleValue waveDecayFactor;
@@ -77,6 +78,9 @@ public class WakesConfig {
 
             itemSpawning = builder
                     .defineEnum("itemSpawning", EffectSpawningRule.ONLY_SIMULATION);
+
+            fishingBobberSpawning = builder
+                    .defineEnum("fishingBobberSpawning", EffectSpawningRule.ONLY_SIMULATION);
 
             builder.pop();
 
