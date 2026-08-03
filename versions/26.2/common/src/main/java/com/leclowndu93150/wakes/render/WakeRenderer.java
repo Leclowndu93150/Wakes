@@ -44,12 +44,18 @@ public class WakeRenderer {
         BlockPos.MutableBlockPos lightPos = new BlockPos.MutableBlockPos();
 
         for (Brick brick : bricks) {
-            if (!brick.hasPopulatedPixels) continue;
+            if (brick.imgPtr == -1) continue;
 
+            if (brick.pixelsStale) {
+                brick.populatePixels();
+            }
             if (brick.wakeTexture == null) {
                 brick.wakeTexture = new WakeTexture(WakeHandler.resolution.res, true, QuadTree.BRICK_WIDTH);
             }
-            brick.wakeTexture.loadTexture(brick.imgPtr);
+            if (brick.pixelsDirty) {
+                brick.wakeTexture.loadTexture(brick.imgPtr);
+                brick.pixelsDirty = false;
+            }
 
             RenderType type = brick.wakeTexture.renderType();
 

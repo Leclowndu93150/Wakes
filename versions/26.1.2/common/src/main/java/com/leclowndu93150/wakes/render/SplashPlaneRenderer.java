@@ -2,7 +2,6 @@ package com.leclowndu93150.wakes.render;
 
 import com.leclowndu93150.wakes.WakesClient;
 import com.leclowndu93150.wakes.config.WakesConfig;
-import com.leclowndu93150.wakes.config.enums.Resolution;
 import com.leclowndu93150.wakes.duck.ProducesWake;
 import com.leclowndu93150.wakes.particle.custom.SplashPlaneParticle;
 import com.leclowndu93150.wakes.render.enums.RenderType;
@@ -39,7 +38,6 @@ import org.joml.Vector4f;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
 
@@ -49,16 +47,6 @@ public class SplashPlaneRenderer {
     private static List<Triangle2D> triangles;
     private static ArrayList<Vec3> vertices;
     private static ArrayList<Vec3> normals;
-
-    public static Map<Resolution, WakeTexture> wakeTextures = null;
-
-    private static void initTextures() {
-        wakeTextures = Map.of(
-                Resolution.EIGHT, new WakeTexture(Resolution.EIGHT.res, false, 1),
-                Resolution.SIXTEEN, new WakeTexture(Resolution.SIXTEEN.res, false, 1),
-                Resolution.THIRTYTWO, new WakeTexture(Resolution.THIRTYTWO.res, false, 1)
-        );
-    }
 
     private static final double SQRT_8 = Math.sqrt(8);
 
@@ -84,7 +72,6 @@ public class SplashPlaneRenderer {
     }
 
     private static <T extends Entity> void renderParticle(T entity, SplashPlaneParticle splashPlane, Vec3 cameraPos, PoseStack matrices) {
-        if (wakeTextures == null) initTextures();
         if (WakesConfig.GENERAL.disableMod.get() || !WakesUtils.getEffectRuleFromSource(entity).renderPlanes) {
             return;
         }
@@ -99,8 +86,15 @@ public class SplashPlaneRenderer {
         Matrix4f matrix = matrices.last().pose();
         matrices.popPose();
 
-        WakeTexture texture = wakeTextures.get(WakeHandler.resolution);
-        texture.loadTexture(splashPlane.imgPtr);
+        if (splashPlane.imgPtr == -1) return;
+        if (splashPlane.wakeTexture == null) {
+            splashPlane.wakeTexture = new WakeTexture(WakeHandler.resolution.res, false, 1);
+        }
+        if (splashPlane.pixelsDirty) {
+            splashPlane.wakeTexture.loadTexture(splashPlane.imgPtr);
+            splashPlane.pixelsDirty = false;
+        }
+        WakeTexture texture = splashPlane.wakeTexture;
 
         int packedLight = computeEntityLight(entity);
         renderSurface(matrix, texture, packedLight);

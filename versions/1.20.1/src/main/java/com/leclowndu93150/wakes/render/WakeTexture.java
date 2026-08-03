@@ -2,7 +2,6 @@ package com.leclowndu93150.wakes.render;
 
 import com.leclowndu93150.wakes.render.enums.RenderType;
 import com.leclowndu93150.wakes.simulation.QuadTree;
-import com.leclowndu93150.wakes.simulation.WakeHandler;
 import com.mojang.blaze3d.platform.GlConst;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.TextureUtil;
@@ -11,7 +10,7 @@ import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL14;
 
 public class WakeTexture {
-    public int res;
+    public final int res;
     public int glTexId;
     public final boolean isUsingBricks;
     private final int resolutionScaling;
@@ -34,19 +33,25 @@ public class WakeTexture {
         GlStateManager._texImage2D(GlConst.GL_TEXTURE_2D, 0, GlConst.GL_RGBA, resolutionScaling * res, resolutionScaling * res, 0, GlConst.GL_RGBA, GlConst.GL_UNSIGNED_BYTE, null);
     }
 
-    public void loadTexture(long imgPtr) {
+    public void upload(long imgPtr) {
         GlStateManager._bindTexture(glTexId);
         GlStateManager._pixelStore(GlConst.GL_UNPACK_ROW_LENGTH, 0);
         GlStateManager._pixelStore(GlConst.GL_UNPACK_SKIP_PIXELS, 0);
         GlStateManager._pixelStore(GlConst.GL_UNPACK_SKIP_ROWS, 0);
         GlStateManager._pixelStore(GlConst.GL_UNPACK_ALIGNMENT, 4);
 
-        int dim = resolutionScaling * WakeHandler.resolution.res;
+        int dim = resolutionScaling * res;
         GlStateManager._texSubImage2D(GlConst.GL_TEXTURE_2D, 0,0,0,dim, dim, GlConst.GL_RGBA, GlConst.GL_UNSIGNED_BYTE, imgPtr);
+    }
 
+    public void bind() {
         RenderSystem.setShaderTexture(0, glTexId);
         RenderSystem.setShader(RenderType.getProgram());
         RenderSystem.enableDepthTest(); // Is it THIS simple? https://github.com/Goby56/wakes/issues/46
         RenderSystem.disableCull();
+    }
+
+    public void close() {
+        TextureUtil.releaseTextureId(glTexId);
     }
 }

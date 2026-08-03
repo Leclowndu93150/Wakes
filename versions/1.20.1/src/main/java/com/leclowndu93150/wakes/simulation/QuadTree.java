@@ -113,7 +113,7 @@ public class QuadTree {
 
     public void recolorWakes() {
         if (hasLeaf()) {
-            brick.populatePixels();
+            brick.markForRecolor();
         }
         if (children == null) return;
         for (var tree : children) {

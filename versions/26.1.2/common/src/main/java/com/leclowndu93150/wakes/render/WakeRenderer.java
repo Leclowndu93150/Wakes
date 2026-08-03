@@ -2,7 +2,6 @@ package com.leclowndu93150.wakes.render;
 
 import com.leclowndu93150.wakes.WakesClient;
 import com.leclowndu93150.wakes.config.WakesConfig;
-import com.leclowndu93150.wakes.config.enums.Resolution;
 import com.leclowndu93150.wakes.render.enums.RenderType;
 import com.leclowndu93150.wakes.simulation.Brick;
 import com.leclowndu93150.wakes.simulation.QuadTree;
@@ -33,20 +32,10 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
 
 public class WakeRenderer {
-    public static Map<Resolution, WakeTexture> wakeTextures = null;
-
-    private static void initTextures() {
-        wakeTextures = Map.of(
-                Resolution.EIGHT, new WakeTexture(Resolution.EIGHT.res, true, QuadTree.BRICK_WIDTH),
-                Resolution.SIXTEEN, new WakeTexture(Resolution.SIXTEEN.res, true, QuadTree.BRICK_WIDTH),
-                Resolution.THIRTYTWO, new WakeTexture(Resolution.THIRTYTWO.res, true, QuadTree.BRICK_WIDTH)
-        );
-    }
 
     public static void render(PoseStack poseStack, Frustum frustum, Vec3 cameraPos) {
         if (WakesConfig.GENERAL.disableMod.get()) {
@@ -54,37 +43,43 @@ public class WakeRenderer {
             return;
         }
 
-        if (wakeTextures == null) initTextures();
-
         WakeHandler wakeHandler = WakeHandler.getInstance().orElse(null);
         if (wakeHandler == null || WakeHandler.resolutionResetScheduled) return;
 
         ArrayList<Brick> bricks = wakeHandler.getVisible(frustum, Brick.class);
         if (bricks.isEmpty()) return;
 
+        long tRendering = System.nanoTime();
+
+        ArrayList<Brick> ready = new ArrayList<>(bricks.size());
+        for (Brick brick : bricks) {
+            if (brick.imgPtr == -1) continue;
+            if (brick.pixelsStale) {
+                brick.populatePixels();
+            }
+            if (brick.wakeTexture == null) {
+                brick.wakeTexture = new WakeTexture(WakeHandler.resolution.res, true, QuadTree.BRICK_WIDTH);
+            }
+            if (brick.pixelsDirty) {
+                brick.wakeTexture.loadTexture(brick.imgPtr);
+                brick.pixelsDirty = false;
+            }
+            ready.add(brick);
+        }
+        if (ready.isEmpty()) {
+            WakesDebugInfo.quadsRendered = 0;
+            return;
+        }
+
         RenderPipeline pipeline = RenderType.getPipeline();
         Matrix4f matrix = poseStack.last().pose();
 
-        Resolution resolution = WakeHandler.resolution;
-        WakeTexture texture = wakeTextures.get(resolution);
-        int n = 0;
-        long tRendering = System.nanoTime();
-
-        GpuSampler sampler = RenderSystem.getSamplerCache().getRepeat(FilterMode.NEAREST);
         Minecraft client = Minecraft.getInstance();
-        RenderSystem.AutoStorageIndexBuffer seqBuffer = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS);
-        GpuBuffer quadIndexBuffer = seqBuffer.getBuffer(6);
-
-        GpuBufferSlice dynamicTransforms = RenderSystem.getDynamicUniforms()
-                .writeTransform(RenderSystem.getModelViewMatrix(), new Vector4f(1f, 1f, 1f, 1f), new Vector3f(), new Matrix4f());
-
         ClientLevel level = client.level;
         BlockPos.MutableBlockPos lightPos = new BlockPos.MutableBlockPos();
 
-        for (Brick brick : bricks) {
-            if (!brick.hasPopulatedPixels) continue;
-            texture.loadTexture(brick.imgPtr);
-
+        BufferBuilder bb = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, pipeline.getVertexFormat());
+        for (Brick brick : ready) {
             Vector3f pos = brick.pos.add(cameraPos.reverse()).toVector3f().add(0, WakeNode.WATER_OFFSET, 0);
             float dim = brick.dim;
 
@@ -96,7 +91,6 @@ public class WakeRenderer {
             int light11 = lightAt(level, lightPos, bx + (int) dim, by, bz + (int) dim);
             int light10 = lightAt(level, lightPos, bx + (int) dim, by, bz);
 
-            BufferBuilder bb = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, pipeline.getVertexFormat());
             bb.addVertex(matrix, pos.x, pos.y, pos.z)
                     .setUv(0, 0).setColor(1f, 1f, 1f, 1f)
                     .setLight(light00).setNormal(0f, 1f, 0f);
@@ -109,32 +103,40 @@ public class WakeRenderer {
             bb.addVertex(matrix, pos.x + dim, pos.y, pos.z)
                     .setUv(1, 0).setColor(1f, 1f, 1f, 1f)
                     .setLight(light10).setNormal(0f, 1f, 0f);
-
-            MeshData built = bb.buildOrThrow();
-            GpuBuffer vertexBuffer = pipeline.getVertexFormat().uploadImmediateVertexBuffer(built.vertexBuffer());
-
-            try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(
-                    () -> WakesClient.MOD_ID + " wake render",
-                    client.getMainRenderTarget().getColorTextureView(),
-                    OptionalInt.empty(),
-                    client.getMainRenderTarget().getDepthTextureView(),
-                    OptionalDouble.empty())) {
-
-                pass.setPipeline(pipeline);
-                RenderSystem.bindDefaultUniforms(pass);
-                pass.setUniform("DynamicTransforms", dynamicTransforms);
-                pass.bindTexture("Sampler0", texture.getTextureView(), sampler);
-                pass.bindTexture("Sampler2", client.gameRenderer.lightmap(), sampler);
-                pass.setVertexBuffer(0, vertexBuffer);
-                pass.setIndexBuffer(quadIndexBuffer, seqBuffer.type());
-                pass.drawIndexed(0, 0, 6, 1);
-            }
-            built.close();
-            n++;
         }
 
+        MeshData built = bb.buildOrThrow();
+        GpuBuffer vertexBuffer = pipeline.getVertexFormat().uploadImmediateVertexBuffer(built.vertexBuffer());
+
+        GpuSampler sampler = RenderSystem.getSamplerCache().getRepeat(FilterMode.NEAREST);
+        RenderSystem.AutoStorageIndexBuffer seqBuffer = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS);
+        GpuBuffer quadIndexBuffer = seqBuffer.getBuffer(6);
+
+        GpuBufferSlice dynamicTransforms = RenderSystem.getDynamicUniforms()
+                .writeTransform(RenderSystem.getModelViewMatrix(), new Vector4f(1f, 1f, 1f, 1f), new Vector3f(), new Matrix4f());
+
+        try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(
+                () -> WakesClient.MOD_ID + " wake render",
+                client.getMainRenderTarget().getColorTextureView(),
+                OptionalInt.empty(),
+                client.getMainRenderTarget().getDepthTextureView(),
+                OptionalDouble.empty())) {
+
+            pass.setPipeline(pipeline);
+            RenderSystem.bindDefaultUniforms(pass);
+            pass.setUniform("DynamicTransforms", dynamicTransforms);
+            pass.bindTexture("Sampler2", client.gameRenderer.lightmap(), sampler);
+            pass.setVertexBuffer(0, vertexBuffer);
+            pass.setIndexBuffer(quadIndexBuffer, seqBuffer.type());
+            for (int i = 0; i < ready.size(); i++) {
+                pass.bindTexture("Sampler0", ready.get(i).wakeTexture.getTextureView(), sampler);
+                pass.drawIndexed(i * 4, 0, 6, 1);
+            }
+        }
+        built.close();
+
         WakesDebugInfo.renderingTime.add(System.nanoTime() - tRendering);
-        WakesDebugInfo.quadsRendered = n;
+        WakesDebugInfo.quadsRendered = ready.size();
     }
 
     private static int lightAt(ClientLevel level, BlockPos.MutableBlockPos pos, int x, int y, int z) {

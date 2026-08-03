@@ -3,7 +3,6 @@ package com.leclowndu93150.wakes.render;
 import com.leclowndu93150.wakes.compat.ModCompat;
 import com.leclowndu93150.wakes.compat.sable.SableCompat;
 import com.leclowndu93150.wakes.config.WakesConfig;
-import com.leclowndu93150.wakes.config.enums.Resolution;
 import com.leclowndu93150.wakes.simulation.Brick;
 import com.leclowndu93150.wakes.simulation.WakeHandler;
 import com.leclowndu93150.wakes.simulation.WakeNode;
@@ -31,16 +30,6 @@ import java.util.*;
 
 @EventBusSubscriber(value = Dist.CLIENT, bus = EventBusSubscriber.Bus.GAME)
 public class WakeRenderer {
-    public static Map<Resolution, WakeTexture> wakeTextures = null;
-
-    private static void initTextures() {
-        wakeTextures = Map.of(
-                Resolution.EIGHT, new WakeTexture(Resolution.EIGHT.res, true),
-                Resolution.SIXTEEN, new WakeTexture(Resolution.SIXTEEN.res, true),
-                Resolution.THIRTYTWO, new WakeTexture(Resolution.THIRTYTWO.res, true)
-        );
-    }
-
     @SubscribeEvent
     public static void onRenderLevel(RenderLevelStageEvent event) {
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) {
@@ -52,8 +41,6 @@ public class WakeRenderer {
             return;
         }
 
-        if (wakeTextures == null) initTextures();
-
         WakeHandler wakeHandler = WakeHandler.getInstance().orElse(null);
         if (wakeHandler == null || WakeHandler.resolutionResetScheduled) return;
 
@@ -64,22 +51,31 @@ public class WakeRenderer {
 
         Minecraft.getInstance().gameRenderer.overlayTexture().setupOverlayColor();
 
-        Resolution resolution = WakeHandler.resolution;
         Level level = Minecraft.getInstance().level;
         float partialTick = Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true);
         int n = 0;
         long tRendering = System.nanoTime();
         for (var brick : bricks) {
-            render(matrix, event.getCamera(), brick, wakeTextures.get(resolution), level, partialTick);
+            render(matrix, event.getCamera(), brick, level, partialTick);
             n++;
         }
         WakesDebugInfo.renderingTime.add(System.nanoTime() - tRendering);
         WakesDebugInfo.quadsRendered = n;
     }
 
-    private static void render(Matrix4f matrix, Camera camera, Brick brick, WakeTexture texture, Level level, float partialTick) {
-        if (!brick.hasPopulatedPixels) return;
-        texture.loadTexture(brick.imgPtr);
+    private static void render(Matrix4f matrix, Camera camera, Brick brick, Level level, float partialTick) {
+        if (brick.imgPtr == -1) return;
+        if (brick.pixelsStale) {
+            brick.populatePixels();
+        }
+        if (brick.wakeTexture == null) {
+            brick.wakeTexture = new WakeTexture(WakeHandler.resolution.res, true);
+        }
+        if (brick.pixelsDirty) {
+            brick.wakeTexture.upload(brick.imgPtr);
+            brick.pixelsDirty = false;
+        }
+        brick.wakeTexture.bind();
 
         RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
         RenderSystem.enableBlend();

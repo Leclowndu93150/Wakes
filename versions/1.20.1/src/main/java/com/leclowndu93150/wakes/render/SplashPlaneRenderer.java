@@ -1,7 +1,6 @@
 package com.leclowndu93150.wakes.render;
 
 import com.leclowndu93150.wakes.config.WakesConfig;
-import com.leclowndu93150.wakes.config.enums.Resolution;
 import com.leclowndu93150.wakes.duck.ProducesWake;
 import com.leclowndu93150.wakes.particle.custom.SplashPlaneParticle;
 import com.leclowndu93150.wakes.render.enums.RenderType;
@@ -40,16 +39,6 @@ public class SplashPlaneRenderer {
     private static ArrayList<Vec3> vertices;
     private static ArrayList<Vec3> normals;
 
-    public static Map<Resolution, WakeTexture> wakeTextures = null;
-
-    private static void initTextures() {
-        wakeTextures = Map.of(
-                Resolution.EIGHT, new WakeTexture(Resolution.EIGHT.res, false),
-                Resolution.SIXTEEN, new WakeTexture(Resolution.SIXTEEN.res, false),
-                Resolution.THIRTYTWO, new WakeTexture(Resolution.THIRTYTWO.res, false)
-        );
-    }
-
     private static final double SQRT_8 = Math.sqrt(8);
 
     public static void init() {
@@ -80,7 +69,6 @@ public class SplashPlaneRenderer {
     }
 
     public static <T extends Entity> void render(T entity, SplashPlaneParticle splashPlane, RenderLevelStageEvent context, PoseStack matrices) {
-        if (wakeTextures == null) initTextures();
         if (WakesConfig.GENERAL.disableMod.get() || !WakesUtils.getEffectRuleFromSource(entity).renderPlanes) {
             return;
         }
@@ -97,8 +85,17 @@ public class SplashPlaneRenderer {
         matrices.scale(scalar, scalar, scalar);
         Matrix4f matrix = matrices.last().pose();
 
-        wakeTextures.get(WakeHandler.resolution).loadTexture(splashPlane.imgPtr);
-        renderSurface(matrix);
+        if (splashPlane.imgPtr != -1) {
+            if (splashPlane.wakeTexture == null) {
+                splashPlane.wakeTexture = new WakeTexture(WakeHandler.resolution.res, false);
+            }
+            if (splashPlane.pixelsDirty) {
+                splashPlane.wakeTexture.upload(splashPlane.imgPtr);
+                splashPlane.pixelsDirty = false;
+            }
+            splashPlane.wakeTexture.bind();
+            renderSurface(matrix);
+        }
 
         matrices.popPose();
     }

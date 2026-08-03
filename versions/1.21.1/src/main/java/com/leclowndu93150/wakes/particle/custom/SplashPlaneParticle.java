@@ -4,6 +4,8 @@ import com.leclowndu93150.wakes.config.WakesConfig;
 import com.leclowndu93150.wakes.duck.ProducesWake;
 import com.leclowndu93150.wakes.particle.ModParticles;
 import com.leclowndu93150.wakes.particle.WithOwnerParticleType;
+import com.leclowndu93150.wakes.render.WakeColor;
+import com.leclowndu93150.wakes.render.WakeTexture;
 import com.leclowndu93150.wakes.simulation.SimulationNode;
 import com.leclowndu93150.wakes.simulation.WakeHandler;
 import com.leclowndu93150.wakes.utils.WakesUtils;
@@ -41,7 +43,9 @@ public class SplashPlaneParticle extends Particle {
 
     public long imgPtr = -1;
     public int texRes;
-    public boolean hasPopulatedPixels = false;
+    public boolean pixelsDirty = false;
+    public WakeTexture wakeTexture = null;
+    private int[] palette = null;
 
     public boolean isRenderReady = false;
     public float lerpedYaw = 0;
@@ -119,14 +123,22 @@ public class SplashPlaneParticle extends Particle {
         }
 
         this.texRes = res;
-        this.hasPopulatedPixels = false;
+        this.pixelsDirty = false;
     }
 
     public void deallocTexture() {
-        MemoryUtil.nmemFree(imgPtr);
+        if (imgPtr != -1) {
+            MemoryUtil.nmemFree(imgPtr);
+            imgPtr = -1;
+        }
+        if (wakeTexture != null) {
+            wakeTexture.close();
+            wakeTexture = null;
+        }
     }
 
     public void populatePixels() {
+        if (imgPtr == -1) return;
         int fluidColor = BiomeColors.getAverageWaterColor(level, this.owner.blockPosition());
         int lightCoordinate = LevelRenderer.getLightColor(level, this.owner.blockPosition());
         int lightCol = Minecraft.getInstance().gameRenderer.lightTexture().lightPixels.getPixelRGBA(
@@ -135,13 +147,32 @@ public class SplashPlaneParticle extends Particle {
         );
         float opacity = WakesConfig.APPEARANCE.wakeOpacity.get().floatValue() * 0.9f;
         int res = WakeHandler.resolution.res;
-        for (int r = 0; r < res; r++) {
-            for (int c = 0; c < res; c++) {
-                long pixelOffset = 4L * (((long) r * res) + c);
-                MemoryUtil.memPutInt(imgPtr + pixelOffset, simulationNode.getPixelColor(c, r, fluidColor, lightCol, opacity));
+        if (WakesConfig.DEBUG.debugColors.get()) {
+            for (int r = 0; r < res; r++) {
+                for (int c = 0; c < res; c++) {
+                    long pixelOffset = 4L * (((long) r * res) + c);
+                    MemoryUtil.memPutInt(imgPtr + pixelOffset, simulationNode.getPixelColor(c, r, fluidColor, lightCol, opacity));
+                }
+            }
+        } else {
+            WakeColor.updateCaches();
+            if (palette == null || palette.length != WakeColor.paletteSize()) {
+                palette = new int[WakeColor.paletteSize()];
+            }
+            WakeColor.computePalette(palette, fluidColor, lightCol, opacity);
+            float[][][] u = simulationNode.u;
+            for (int r = 0; r < res; r++) {
+                float[] u0 = u[0][r + 1];
+                float[] u1 = u[1][r + 1];
+                float[] u2 = u[2][r + 1];
+                long rowPtr = imgPtr + 4L * ((long) r * res);
+                for (int c = 0; c < res; c++) {
+                    float waveEqAvg = (u0[c + 1] + u1[c + 1] + u2[c + 1]) / 3;
+                    MemoryUtil.memPutInt(rowPtr + 4L * c, palette[WakeColor.paletteIndex(waveEqAvg)]);
+                }
             }
         }
-        this.hasPopulatedPixels = true;
+        this.pixelsDirty = true;
     }
 
     @Override

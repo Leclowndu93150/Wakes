@@ -112,16 +112,37 @@ public class WakeColor {
         int tintG = fluidCol >> 8 & 0xFF;
         int tintB = fluidCol & 0xFF;
 
+        WakeColor color = WakesConfig.getWakeColor(paletteIndex(waveEqAvg));
+        return blendFast(color, tintR, tintG, tintB, lightColor, opacity);
+    }
+
+    public static void updateCaches() {
+        updateBlendCache();
+        updateIntervalsCache();
+    }
+
+    public static int paletteSize() {
+        return cachedIntervalsSize + 1;
+    }
+
+    public static int paletteIndex(float waveEqAvg) {
         double clampedRange = fastSigmoid(waveEqAvg);
-        int returnIndex = cachedIntervalsSize;
         for (int i = 0; i < cachedIntervalsSize; i++) {
             if (clampedRange < cachedIntervalsArray[i]) {
-                returnIndex = i;
-                break;
+                return i;
             }
         }
-        WakeColor color = WakesConfig.getWakeColor(returnIndex);
-        return blendFast(color, tintR, tintG, tintB, lightColor, opacity);
+        return cachedIntervalsSize;
+    }
+
+    public static void computePalette(int[] palette, int fluidCol, int lightColor, float opacity) {
+        int tintR = fluidCol >> 16 & 0xFF;
+        int tintG = fluidCol >> 8 & 0xFF;
+        int tintB = fluidCol & 0xFF;
+
+        for (int i = 0; i <= cachedIntervalsSize; i++) {
+            palette[i] = blendFast(WakesConfig.getWakeColor(i), tintR, tintG, tintB, lightColor, opacity);
+        }
     }
 
     private static int blendFast(WakeColor color, int tintR, int tintG, int tintB, int lightColor, float opacity) {

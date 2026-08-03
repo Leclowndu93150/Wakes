@@ -2,6 +2,8 @@ package com.leclowndu93150.wakes.simulation;
 
 import com.leclowndu93150.wakes.config.WakesConfig;
 import com.leclowndu93150.wakes.debug.WakesDebugInfo;
+import com.leclowndu93150.wakes.render.WakeColor;
+import com.leclowndu93150.wakes.render.WakeTexture;
 import org.lwjgl.system.MemoryUtil;
 
 import java.util.ArrayList;
@@ -33,9 +35,12 @@ public class Brick {
 
     public long imgPtr = -1;
     public int texRes;
-    public boolean hasPopulatedPixels = false;
+    public WakeTexture wakeTexture = null;
+    public boolean pixelsStale = false;
+    public boolean pixelsDirty = false;
+    private boolean refreshColors = false;
+    private int[] palette = null;
 
-    private boolean shouldDeallocate = false;
     private int unusedTicks = 0;
 
     public Brick(int x, float y, int z, int width) {
@@ -54,8 +59,9 @@ public class Brick {
         } else {
             this.imgPtr = MemoryUtil.nmemRealloc(imgPtr, size);
         }
+        MemoryUtil.memSet(imgPtr, 0, size);
         this.texRes = res;
-        this.hasPopulatedPixels = false;
+        this.pixelsStale = true;
     }
 
     public void deallocTexture() {
@@ -63,6 +69,12 @@ public class Brick {
             MemoryUtil.nmemFree(imgPtr);
             imgPtr = -1;
         }
+        if (wakeTexture != null) {
+            wakeTexture.close();
+            wakeTexture = null;
+        }
+        pixelsStale = false;
+        pixelsDirty = false;
     }
 
 
@@ -71,8 +83,6 @@ public class Brick {
             unusedTicks++;
             if (unusedTicks > 100 && imgPtr != -1) { // Deallocate after 5 seconds of no use
                 deallocTexture();
-                imgPtr = -1;
-                hasPopulatedPixels = false;
             }
             return false;
         }
@@ -81,19 +91,19 @@ public class Brick {
 
         long tNode = System.nanoTime();
         for (int z = 0; z < dim; z++) {
+            WakeNode[] row = nodes[z];
             for (int x = 0; x < dim; x++) {
-                if (this.get(x, z) == null) continue;
+                WakeNode node = row[x];
+                if (node == null) continue;
 
-                if (!this.get(x, z).tick(wakeHandler)) {
+                if (!node.tick(wakeHandler)) {
                     this.clear(x, z);
                 }
             }
         }
         WakesDebugInfo.nodeLogicTime += (System.nanoTime() - tNode);
-        long tTexturing = System.nanoTime();
-        populatePixels();
-        WakesDebugInfo.texturingTime += (System.nanoTime() - tTexturing);
         WakesDebugInfo.nodeCount += occupied;
+        pixelsStale = true;
         return occupied != 0;
     }
 
@@ -152,6 +162,24 @@ public class Brick {
 
     public void clear(int x, int z) {
         this.set(x, z, null);
+        if (imgPtr != -1) {
+            zeroCell(x, z);
+        }
+    }
+
+    private void zeroCell(int x, int z) {
+        int stride = dim * texRes;
+        long cellPtr = imgPtr + texRes * 4L * (((long) z * stride) + x);
+        long rowBytes = 4L * texRes;
+        for (int r = 0; r < texRes; r++) {
+            MemoryUtil.memSet(cellPtr + 4L * ((long) r * stride), 0, rowBytes);
+        }
+        pixelsDirty = true;
+    }
+
+    public void markForRecolor() {
+        refreshColors = true;
+        pixelsStale = true;
     }
 
     private List<WakeNode> getAdjacentNodes(int x, int z) {
@@ -189,39 +217,59 @@ public class Brick {
             initTexture(WakeHandler.resolution.res);
         }
 
+        long tTexturing = System.nanoTime();
         Level world = Minecraft.getInstance().level;
+        boolean debug = WakesConfig.DEBUG.debugColors.get();
+        float wakeOpacity = WakesConfig.APPEARANCE.wakeOpacity.get().floatValue();
+        WakeColor.updateCaches();
+        if (palette == null || palette.length != WakeColor.paletteSize()) {
+            palette = new int[WakeColor.paletteSize()];
+        }
+
+        int stride = dim * texRes;
         for (int z = 0; z < dim; z++) {
             for (int x = 0; x < dim; x++) {
-                WakeNode node = this.get(x, z);
-                int lightCol = LightTexture.FULL_BRIGHT;
-                int fluidColor = 0;
-                float opacity = 0;
-                if (node != null) {
-                    fluidColor = BiomeColors.getAverageWaterColor(world, node.blockPos());
-                    int lightCoordinate = LevelRenderer.getLightColor(world, node.blockPos());
-                    lightCol = Minecraft.getInstance().gameRenderer.lightTexture().lightPixels.getPixelRGBA(
-                            LightTexture.block(lightCoordinate),
-                            LightTexture.sky(lightCoordinate)
-                    );
-                    // TODO LERP LIGHT FROM SURROUNDING BLOCKS
-                    opacity = (float) ((-Math.pow(node.t, 2) + 1) * WakesConfig.APPEARANCE.wakeOpacity.get());
-                }
+                WakeNode node = nodes[z][x];
+                if (node == null) continue;
 
-                // TODO MASS SET PIXELS TO NO COLOR IF NODE DOESNT EXIST (NEED TO REORDER PIXELS STORED?)
-                long nodeOffset = texRes * 4L * (((long) z * dim * texRes) + (long) x);
-                for (int r = 0; r < texRes; r++) {
-                    for (int c = 0; c < texRes; c++) {
-                        int color = 0;
-                        if (node != null) {
-                            // TODO USE SHADERS TO COLOR THE WAKES?
-                            color = node.simulationNode.getPixelColor(c, r, fluidColor, lightCol, opacity);
+                if (refreshColors || !node.hasCachedFluidColor) {
+                    node.cachedFluidColor = BiomeColors.getAverageWaterColor(world, node.blockPos());
+                    node.hasCachedFluidColor = true;
+                }
+                int lightCoordinate = LevelRenderer.getLightColor(world, node.blockPos());
+                int lightCol = Minecraft.getInstance().gameRenderer.lightTexture().lightPixels.getPixelRGBA(
+                        LightTexture.block(lightCoordinate),
+                        LightTexture.sky(lightCoordinate)
+                );
+                float opacity = (float) ((-Math.pow(node.t, 2) + 1) * wakeOpacity);
+                long cellPtr = imgPtr + texRes * 4L * (((long) z * stride) + x);
+
+                if (debug) {
+                    for (int r = 0; r < texRes; r++) {
+                        long rowPtr = cellPtr + 4L * ((long) r * stride);
+                        for (int c = 0; c < texRes; c++) {
+                            MemoryUtil.memPutInt(rowPtr + 4L * c, node.simulationNode.getPixelColor(c, r, node.cachedFluidColor, lightCol, opacity));
                         }
-                        long pixelOffset = 4L * (((long) r * dim * texRes) + c);
-                        MemoryUtil.memPutInt(imgPtr + nodeOffset + pixelOffset, color);
+                    }
+                } else {
+                    WakeColor.computePalette(palette, node.cachedFluidColor, lightCol, opacity);
+                    float[][][] u = node.simulationNode.u;
+                    for (int r = 0; r < texRes; r++) {
+                        float[] u0 = u[0][r + 1];
+                        float[] u1 = u[1][r + 1];
+                        float[] u2 = u[2][r + 1];
+                        long rowPtr = cellPtr + 4L * ((long) r * stride);
+                        for (int c = 0; c < texRes; c++) {
+                            float waveEqAvg = (u0[c + 1] + u1[c + 1] + u2[c + 1]) / 3;
+                            MemoryUtil.memPutInt(rowPtr + 4L * c, palette[WakeColor.paletteIndex(waveEqAvg)]);
+                        }
                     }
                 }
             }
         }
-        hasPopulatedPixels = true;
+        refreshColors = false;
+        pixelsStale = false;
+        pixelsDirty = true;
+        WakesDebugInfo.texturingTime += (System.nanoTime() - tTexturing);
     }
 }

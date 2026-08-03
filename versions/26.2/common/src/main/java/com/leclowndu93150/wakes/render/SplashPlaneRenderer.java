@@ -72,10 +72,14 @@ public class SplashPlaneRenderer {
         final Matrix4f matrix = new Matrix4f(poseStack.last().pose());
         poseStack.popPose();
 
+        if (splashPlane.imgPtr == -1) return;
         if (splashPlane.wakeTexture == null) {
             splashPlane.wakeTexture = new WakeTexture(WakeHandler.resolution.res, false, 1);
         }
-        splashPlane.wakeTexture.loadTexture(splashPlane.imgPtr);
+        if (splashPlane.pixelsDirty) {
+            splashPlane.wakeTexture.loadTexture(splashPlane.imgPtr);
+            splashPlane.pixelsDirty = false;
+        }
 
         final int packedLight = computeEntityLight(entity);
         RenderType type = splashPlane.wakeTexture.renderType();

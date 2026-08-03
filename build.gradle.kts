@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "com.leclowndu93150"
-version = "1.3.7"
+version = "1.4.0"
 
 prism {
     curseMaven()
@@ -160,6 +160,9 @@ prism {
 
     publishing {
         changelog = """
+        - Major performance overhaul (all versions): wake texturing is ~15x faster and GPU texture uploads now only happen when a wake actually changes instead of every frame, drastically reducing stutter on low-end hardware
+        - Off-screen wakes no longer cost any texturing or upload time
+        - Fixed a texture leak that slowly degraded performance over long play sessions
         - Fixed a phantom block-sized wake that appeared near stationary boats (and at world spawn) after sitting still for a while, building up into flickering noise that never faded
         - Wakes from entities that stop moving now fade out properly instead of staying stuck at full opacity
         - Fixed wakes being misaligned by one pixel in negative coordinates

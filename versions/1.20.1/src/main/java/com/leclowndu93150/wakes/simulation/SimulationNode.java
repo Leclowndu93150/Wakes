@@ -112,20 +112,41 @@ public abstract class SimulationNode {
     }
 
     public static class SplashPlaneSimulation extends SimulationNode {
+        private static double[][] angles;
+        private static double[][] dists;
+        private static int tableRes = -1;
+
+        private static void updateTables(int res) {
+            if (tableRes == res) return;
+            tableRes = res;
+            angles = new double[res + 2][res + 2];
+            dists = new double[res + 2][res + 2];
+            for (int z = 1; z < res + 1; z++) {
+                for (int x = 1; x < res + 1; x++) {
+                    angles[z][x] = 10 * Math.atan((z - 16f) / x);
+                    dists[z][x] = Math.sqrt(Math.pow(z - 16, 2) + Math.pow(x, 2));
+                }
+            }
+        }
 
         @Override
         public void tick(@Nullable Float velocity, @Nullable SimulationNode NORTH, @Nullable SimulationNode SOUTH, @Nullable SimulationNode EAST, @Nullable SimulationNode WEST) {
             double t = System.currentTimeMillis() / (double) 1000;
             if (velocity == null) return;
+            updateTables(res);
             int p = (int) (14 * Math.min(1f, 2 * velocity / WakesConfig.APPEARANCE.maxSplashPlaneVelocity.get()));
+            double phase = 2 * Math.PI * t;
             for (int z = 1; z < res+1; z++) {
+                double[] angleRow = angles[z];
+                double[] distRow = dists[z];
+                float[] uRow = this.u[0][z];
                 for (int x = 1; x < res+1; x++) {
-                    this.u[0][z][x] = 0;
-                    double v = Math.atan((z - 16f) / x);
-                    double d = Math.sqrt(Math.pow(z - 16, 2) + Math.pow(x, 2)) + 0.5 * Math.sin(10 * v - 2 * Math.PI * t);
-
+                    double d = distRow[x] + 0.5 * Math.sin(angleRow[x] - phase);
                     if (d < p) {
-                        this.u[0][z][x] = (float) (200 * Math.pow(d - p, 2) / (d*d));
+                        double dp = d - p;
+                        uRow[x] = (float) (200 * dp * dp / (d*d));
+                    } else {
+                        uRow[x] = 0;
                     }
                 }
             }
