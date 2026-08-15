@@ -5,6 +5,8 @@ import com.leclowndu93150.wakes.render.WakeColor;
 import com.leclowndu93150.wakes.utils.WakesUtils;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
+
 public abstract class SimulationNode {
     public float[][][] u;
     public float[][] initialValues;
@@ -39,6 +41,24 @@ public abstract class SimulationNode {
 
     public abstract void tick(@Nullable Float velocity, @Nullable SimulationNode NORTH, @Nullable SimulationNode SOUTH, @Nullable SimulationNode EAST, @Nullable SimulationNode WEST);
 
+    public void advance() {
+    }
+
+    public boolean isQuiet(float epsilon) {
+        for (int z = 1; z < res + 1; z++) {
+            float[] current = u[0][z];
+            float[] previous = u[1][z];
+            for (int x = 1; x < res + 1; x++) {
+                if (Math.abs(current[x]) > epsilon || Math.abs(previous[x]) > epsilon) return false;
+            }
+        }
+        return true;
+    }
+
+    public void solve(@Nullable Float velocity, @Nullable SimulationNode NORTH, @Nullable SimulationNode SOUTH, @Nullable SimulationNode EAST, @Nullable SimulationNode WEST) {
+        tick(velocity, NORTH, SOUTH, EAST, WEST);
+    }
+
     public static class WakeSimulation extends SimulationNode {
         private static float cachedAlpha;
         private static float cachedBeta;
@@ -59,20 +79,12 @@ public abstract class SimulationNode {
 
         @Override
         public void tick(@Nullable Float velocity, @Nullable SimulationNode NORTH, @Nullable SimulationNode SOUTH, @Nullable SimulationNode EAST, @Nullable SimulationNode WEST) {
-            updateCachedParams();
-            float alpha = cachedAlpha;
-            float beta = cachedBeta;
+            advance();
+            solve(velocity, NORTH, SOUTH, EAST, WEST);
+        }
 
-            for (int i = 2; i >= 1; i--) {
-                if (NORTH != null) this.u[i][0] = NORTH.u[i][res];
-                if (SOUTH != null) this.u[i][res+1] = SOUTH.u[i][1];
-                for (int z = 0; z < res+2; z++) {
-                    if (EAST == null && WEST == null) break;
-                    if (EAST != null) this.u[i][z][res+1] = EAST.u[i][z][1];
-                    if (WEST != null) this.u[i][z][0] = WEST.u[i][z][res];
-                }
-            }
-
+        @Override
+        public void advance() {
             float[][] u0 = u[0];
             float[][] u1 = u[1];
             float[][] u2 = u[2];
@@ -86,6 +98,29 @@ public abstract class SimulationNode {
                     u1[z][x] = u0[z][x];
                 }
             }
+        }
+
+        @Override
+        public void solve(@Nullable Float velocity, @Nullable SimulationNode NORTH, @Nullable SimulationNode SOUTH, @Nullable SimulationNode EAST, @Nullable SimulationNode WEST) {
+            updateCachedParams();
+            float alpha = cachedAlpha;
+            float beta = cachedBeta;
+
+            for (int i = 2; i >= 1; i--) {
+                float[][] layer = this.u[i];
+                if (NORTH != null) System.arraycopy(NORTH.u[i][res], 0, layer[0], 0, res+2);
+                else Arrays.fill(layer[0], 0f);
+                if (SOUTH != null) System.arraycopy(SOUTH.u[i][1], 0, layer[res+1], 0, res+2);
+                else Arrays.fill(layer[res+1], 0f);
+                for (int z = 0; z < res+2; z++) {
+                    layer[z][res+1] = EAST != null ? EAST.u[i][z][1] : 0f;
+                    layer[z][0] = WEST != null ? WEST.u[i][z][res] : 0f;
+                }
+            }
+
+            float[][] u0 = u[0];
+            float[][] u1 = u[1];
+            float[][] u2 = u[2];
 
             for (int z = 1; z < res+1; z++) {
                 float[] rowAbove = u1[z - 1];

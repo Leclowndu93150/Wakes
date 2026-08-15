@@ -6,7 +6,8 @@
   "refmap": "wakes.refmap.json",
   "client": [
     "SableLevelPlotMixin",
-    "SubLevelTickMixin"
+    "SubLevelTickMixin",
+    "SablePaddleMixin"
   ],
   "injectors": {
     "defaultRequire": 0

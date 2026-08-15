@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "com.leclowndu93150"
-version = "1.4.0"
+version = "1.4.1"
 
 prism {
     curseMaven()
@@ -35,6 +35,8 @@ prism {
             dependencies {
                 modCompileOnly("curse.maven:oculus-581495:6020952")
                 modCompileOnly("curse.maven:embeddium-908741:5681725")
+                modRuntimeOnly("curse.maven:embeddium-908741:5681725")
+                modRuntimeOnly("curse.maven:oculus-581495:6020952")
                 modCompileOnly("curse.maven:valkyrien-skies-258371:7377431")
                 modImplementation("curse.maven:kotlin-for-forge-351264:5402061")
                 modImplementation("curse.maven:alekiships-1068445:5963449")
@@ -79,10 +81,10 @@ prism {
             dependencies {
                 compileOnly("curse.maven:irisshaders-455508:6213632")
                 implementation("curse.maven:sodium-394468:6211307")
+                runtimeOnly("curse.maven:irisshaders-455508:6213632")
                 compileOnly("curse.maven:sable-1312371:8007005")
                 runtimeOnly("curse.maven:sable-1312371:8007005")
                 compileOnly("dev.ryanhcode.sable-companion:sable-companion-common-1.21.1:1.6.0")
-                compileOnly("maven.modrinth:create-aeronautics:1.2.1+mc1.21.1")
                 runtimeOnly("maven.modrinth:create-aeronautics:1.2.1+mc1.21.1")
                 compileOnly("curse.maven:create-328085:7963363")
                 runtimeOnly("curse.maven:create-328085:7963363")
@@ -101,6 +103,7 @@ prism {
             dependencies {
                 compileOnly("maven.modrinth:forge-config-api-port:jUe0ucoE")
                 compileOnly("curse.maven:baguettelib-1264423:8010960")
+                compileOnly("curse.maven:irisshaders-455508:8571919")
             }
         }
 
@@ -112,6 +115,8 @@ prism {
                 modImplementation("maven.modrinth:forge-config-api-port:jUe0ucoE")
                 modImplementation("curse.maven:baguettelib-1264423:8010960")
                 modImplementation("maven.modrinth:modmenu:p7gjPPpV")
+                modRuntimeOnly("curse.maven:sodium-394468:8396480")
+                modRuntimeOnly("curse.maven:irisshaders-455508:8571919")
             }
         }
 
@@ -120,6 +125,8 @@ prism {
 
             dependencies {
                 implementation("com.leclowndu93150.baguettelib:baguettelib-26.1.2-neoforge:2.0.4")
+                modRuntimeOnly("curse.maven:sodium-394468:8396481")
+                modRuntimeOnly("curse.maven:irisshaders-455508:8571918")
             }
         }
     }
@@ -135,6 +142,7 @@ prism {
             dependencies {
                 compileOnly("maven.modrinth:forge-config-api-port:86ROVP2H")
                 compileOnly("maven.modrinth:baguettelib:2eXYouke")
+                compileOnly("curse.maven:irisshaders-455508:8396841")
             }
         }
 
@@ -146,6 +154,8 @@ prism {
                 modImplementation("maven.modrinth:forge-config-api-port:86ROVP2H")
                 modImplementation("maven.modrinth:baguettelib:2eXYouke")
                 modImplementation("maven.modrinth:modmenu:TLnEHUyx")
+                modRuntimeOnly("curse.maven:sodium-394468:8396428")
+                modRuntimeOnly("curse.maven:irisshaders-455508:8396841")
             }
         }
 
@@ -154,19 +164,27 @@ prism {
 
             dependencies {
                 modImplementation("maven.modrinth:baguettelib:h4oVSDVz")
+                modRuntimeOnly("curse.maven:sodium-394468:8396429")
+                modRuntimeOnly("curse.maven:irisshaders-455508:8396844")
             }
         }
     }
 
     publishing {
         changelog = """
-        - Major performance overhaul (all versions): wake texturing is ~15x faster and GPU texture uploads now only happen when a wake actually changes instead of every frame, drastically reducing stutter on low-end hardware
-        - Off-screen wakes no longer cost any texturing or upload time
-        - Fixed a texture leak that slowly degraded performance over long play sessions
-        - Fishing bobbers now make a small splash when they land in water (configurable, can be turned off)
-        - Fixed a phantom block-sized wake that appeared near stationary boats (and at world spawn) after sitting still for a while, building up into flickering noise that never faded
-        - Wakes from entities that stop moving now fade out properly instead of staying stuck at full opacity
-        - Fixed wakes being misaligned by one pixel in negative coordinates
+        Shader support improvements:
+        - Fixed wakes clipping through the water surface when using shaders that animate water. Wakes are now lifted by the exact wave height of the loaded shader pack, read from the pack itself along with your in-game shader settings, instead of a one-size-fits-all guess
+        - Supported out of the box: Complementary (Reimagined, Unbound, Spooklementary, Voxlementary), Rethinking Voxels, BSL and BSL Classic, AstraLex, Insanity, Pastel, Photon, Hysteria, Sildur's Vibrant Shaders and Kappa. Packs that do not animate water are detected too and get no offset at all
+        - Added "Extra shader water offset" for the rare pack whose water animation cannot be detected automatically
+        - Fixed wake lighting under shaders. Wakes were being dimmed by a flat 50% that had nothing to do with actual light levels, which fought against the lighting the shader pack was already applying. Wakes are now lit entirely by the shader pack, so they respond properly to time of day, shadows and nearby light sources
+
+        Fixes:
+        - Fixed dedicated servers failing to start when Wakes was left in the server's mods folder.
+        - Fixed wake trails breaking up into hard square blocks when a lot of wakes were made at once. Ripples now spread smoothly across block borders instead of stopping at them, and wakes fade out gradually instead of whole blocks popping out of existence
+        - Wakes no longer flicker between neighbouring blocks of different brightness as they fade
+
+        Additions:
+        - Paddling with a shovel while standing on a floating structure now makes a wake (needs Sable, 1.21.1 only)
         """.trimIndent()
 
         type = STABLE

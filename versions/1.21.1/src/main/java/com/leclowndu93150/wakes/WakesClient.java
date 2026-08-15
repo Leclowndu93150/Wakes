@@ -1,16 +1,15 @@
 package com.leclowndu93150.wakes;
 
+import com.leclowndu93150.wakes.compat.iris.IrisAccess;
 import com.leclowndu93150.wakes.config.WakesConfig;
 import com.leclowndu93150.wakes.particle.ModParticles;
 import com.leclowndu93150.wakes.render.SplashPlaneRenderer;
-import net.irisshaders.iris.api.v0.IrisApi;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
-import net.neoforged.fml.loading.FMLLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,9 +33,6 @@ public class WakesClient {
 	}
 
 	public static boolean areShadersEnabled() {
-		if (FMLLoader.getLoadingModList().getModFileById("iris") != null) {
-			return IrisApi.getInstance().getConfig().areShadersEnabled();
-		}
-		return false;
+		return IrisAccess.shadersEnabled();
 	}
 }

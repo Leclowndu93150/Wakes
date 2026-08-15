@@ -20,6 +20,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
@@ -31,6 +32,8 @@ import java.util.Map;
 import java.util.UUID;
 
 public class SableCompat {
+    private static final float PADDLE_SPLASH_RADIUS = 0.45f;
+
     private static final double PROBE_BELOW = 2.0;
     private static final int NO_FLUID_RESCAN_INTERVAL = 10;
     private static final double NO_FLUID_RESCAN_MOVE_SQ = 1.0;
@@ -667,6 +670,24 @@ public class SableCompat {
             }
         }
         return (float) (localPos.y + 1);
+    }
+
+    public static void spawnPaddleWake(BlockHitResult hit, Level level) {
+        if (level == null || !level.isClientSide) return;
+        if (WakesConfig.GENERAL.disableMod.get()) return;
+
+        BlockPos blockPos = hit.getBlockPos();
+        FluidState fluidState = level.getFluidState(blockPos);
+        if (!WakesConfig.getFluidWhitelist().contains(fluidState.getType())) return;
+
+        WakeHandler wakeHandler = WakeHandler.getInstance(level).orElse(null);
+        if (wakeHandler == null) return;
+
+        Vec3 hitPos = hit.getLocation();
+        int strength = WakesConfig.GENERAL.paddleStrength.get();
+        for (WakeNode node : WakeNode.Factory.splashCircle(hitPos.x, blockPos.getY(), hitPos.z, PADDLE_SPLASH_RADIUS, strength, 1.0)) {
+            wakeHandler.insert(node);
+        }
     }
 
     public static Vec3 toLocalPos(Object subLevelObj, Vec3 globalPos) {

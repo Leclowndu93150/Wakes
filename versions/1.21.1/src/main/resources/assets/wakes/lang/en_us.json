@@ -19,6 +19,8 @@
   "wakes.midnightconfig.wakeResolution.tooltip": "The pixel resolution of the wakes. Good for adjusting the wakes to better visually fit some resource packs.",
   "wakes.midnightconfig.shaderLightPassthrough": "Shader light passthrough",
   "wakes.midnightconfig.shaderLightPassthrough.tooltip": "Used to fine tune the appearance of wakes when using shaders. A higher value yields brighter wakes.",
+  "wakes.midnightconfig.shaderWaterHeightOffset": "Extra shader water offset",
+  "wakes.midnightconfig.shaderWaterHeightOffset.tooltip": "Extra height added on top of the wave height detected from the loaded shader pack. Only needed for packs whose water displacement cannot be detected automatically.",
   "wakes.midnightconfig.splashPlaneWidth": "Width",
   "wakes.midnightconfig.splashPlaneHeight": "Height",
   "wakes.midnightconfig.splashPlaneDepth": "Depth",

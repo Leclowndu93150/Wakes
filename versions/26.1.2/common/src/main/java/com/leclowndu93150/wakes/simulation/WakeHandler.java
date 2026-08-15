@@ -83,7 +83,8 @@ public class WakeHandler {
             }
             QuadTree tree = this.trees[i];
             if (tree != null) {
-                tree.tick(this);
+                tree.tickAdvance(this);
+                tree.tickSolve(this);
                 while (pendingNodes.peek() != null) {
                     tree.insert(pendingNodes.poll());
                 }

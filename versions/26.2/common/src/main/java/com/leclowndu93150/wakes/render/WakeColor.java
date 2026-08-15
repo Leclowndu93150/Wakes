@@ -2,8 +2,6 @@ package com.leclowndu93150.wakes.render;
 
 import com.leclowndu93150.wakes.WakesClient;
 import com.leclowndu93150.wakes.config.WakesConfig;
-import net.minecraft.util.LightCoordsUtil;
-import net.minecraft.util.ARGB;
 
 import java.awt.*;
 import java.util.List;
@@ -50,17 +48,9 @@ public class WakeColor {
         return "#" + Integer.toHexString(a << 24 | r << 16 | g << 8 | b);
     }
 
-    private static double invertedLogisticCurve(float x) {
-        float k = WakesConfig.APPEARANCE.shaderLightPassthrough.get().floatValue();
-        return WakesClient.areShadersEnabled ? k * (4 * Math.pow(x - 0.5f, 3) + 0.5f) : x;
-    }
-
-    public static int computeLightColor(int lightCoordinate) {
-        float block = LightCoordsUtil.block(lightCoordinate) / 15f;
-        float sky = LightCoordsUtil.sky(lightCoordinate) / 15f;
-        float brightness = Math.max(block, sky);
-        int c = (int) (brightness * 255);
-        return ARGB.color(255, c, c, c);
+    private static double lightFactor(float x) {
+        if (!WakesClient.areShadersEnabled) return x;
+        return WakesConfig.APPEARANCE.shaderLightPassthrough.get().floatValue();
     }
 
     private static double cachedBlendStrength = -1;
@@ -153,9 +143,9 @@ public class WakeColor {
         int g = (int) (color.g * srcA + tintG * invSrcA);
         int b = (int) (color.b * srcA + tintB * invSrcA);
 
-        r = (int) (r * invertedLogisticCurve((lightColor & 0xFF) / 255f));
-        g = (int) (g * invertedLogisticCurve((lightColor >> 8 & 0xFF) / 255f));
-        b = (int) (b * invertedLogisticCurve((lightColor >> 16 & 0xFF) / 255f));
+        r = (int) (r * lightFactor((lightColor & 0xFF) / 255f));
+        g = (int) (g * lightFactor((lightColor >> 8 & 0xFF) / 255f));
+        b = (int) (b * lightFactor((lightColor >> 16 & 0xFF) / 255f));
 
         int a = (int) (color.a * opacity);
         return a << 24 | b << 16 | g << 8 | r;

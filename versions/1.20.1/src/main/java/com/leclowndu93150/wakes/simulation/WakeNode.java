@@ -27,6 +27,8 @@ public class WakeNode {
 
     // TODO MAKE DISAPPEARANCE DEPENDENT ON WAVE VALUES INSTEAD OF AGE/TIME (MAYBE)
     public static int maxAge = 30;
+    private static final float QUIET_AMPLITUDE = 1.0f;
+    private static final int MAX_LINGER = 4;
     public int age = 0;
     private boolean dead = false;
 
@@ -54,19 +56,52 @@ public class WakeNode {
     }
 
     public SimulationNode getSimulationNode(WakeNode neighboringNode) {
-        if (neighboringNode == null) return null;
+        if (neighboringNode == null || neighboringNode.isDead()) return null;
         return neighboringNode.simulationNode;
     }
 
+    public void unlink() {
+        if (this.NORTH != null) {
+            this.NORTH.SOUTH = null;
+            this.NORTH = null;
+        }
+        if (this.SOUTH != null) {
+            this.SOUTH.NORTH = null;
+            this.SOUTH = null;
+        }
+        if (this.EAST != null) {
+            this.EAST.WEST = null;
+            this.EAST = null;
+        }
+        if (this.WEST != null) {
+            this.WEST.EAST = null;
+            this.WEST = null;
+        }
+    }
+
     public boolean tick(WakeHandler wakeHandler) {
+        if (!tickAdvance()) return false;
+        tickSolve(wakeHandler);
+        return true;
+    }
+
+    public boolean tickAdvance() {
         if (this.isDead()) return false;
         if (this.age++ >= WakeNode.maxAge) {
-            this.markDead();
-            return false;
+            if (this.age >= WakeNode.maxAge * MAX_LINGER || this.simulationNode.isQuiet(QUIET_AMPLITUDE)) {
+                this.markDead();
+                return false;
+            }
         }
-        this.t = this.age / (float) WakeNode.maxAge;
+        this.t = Math.min(1f, this.age / (float) WakeNode.maxAge);
+        this.simulationNode.advance();
+        return true;
+    }
 
-        this.simulationNode.tick(
+    public void tickSolve(WakeHandler wakeHandler) {
+        if (this.isDead()) return;
+
+        this.simulationNode.solve(
                 null,
                 getSimulationNode(this.NORTH),
                 getSimulationNode(this.SOUTH),
@@ -75,7 +110,6 @@ public class WakeNode {
         );
 
         floodFill(wakeHandler);
-        return true;
     }
 
     public void floodFill(WakeHandler wakeHandler) {

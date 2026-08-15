@@ -3,12 +3,13 @@ package com.leclowndu93150.wakes.event;
 import com.leclowndu93150.wakes.simulation.WakeHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
 
-@EventBusSubscriber(bus =  EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber(value = Dist.CLIENT, bus = EventBusSubscriber.Bus.GAME)
 public class WakeClientTicker {
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Pre event) {

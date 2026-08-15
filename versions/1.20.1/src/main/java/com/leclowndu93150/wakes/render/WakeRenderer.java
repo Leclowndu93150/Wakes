@@ -3,6 +3,7 @@ package com.leclowndu93150.wakes.render;
 import com.leclowndu93150.wakes.config.WakesConfig;
 import com.leclowndu93150.wakes.simulation.Brick;
 import com.leclowndu93150.wakes.simulation.WakeHandler;
+import com.leclowndu93150.wakes.render.water.ShaderWaterHeight;
 import com.leclowndu93150.wakes.simulation.WakeNode;
 import com.leclowndu93150.wakes.debug.WakesDebugInfo;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -78,7 +79,7 @@ public class WakeRenderer {
         BufferBuilder buffer = Tesselator.getInstance().getBuilder();
         buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
 
-        Vector3f pos = brick.pos.add(camera.getPosition().reverse()).toVector3f().add(0, WakeNode.WATER_OFFSET, 0);
+        Vector3f pos = brick.pos.add(camera.getPosition().reverse()).toVector3f().add(0, WakeNode.WATER_OFFSET + ShaderWaterHeight.offset(), 0);
 
         buffer.vertex(matrix, pos.x, pos.y, pos.z)
                 .uv(0, 0)

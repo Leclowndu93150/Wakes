@@ -5,6 +5,7 @@ import com.leclowndu93150.wakes.compat.sable.SableCompat;
 import com.leclowndu93150.wakes.config.WakesConfig;
 import com.leclowndu93150.wakes.simulation.Brick;
 import com.leclowndu93150.wakes.simulation.WakeHandler;
+import com.leclowndu93150.wakes.render.water.ShaderWaterHeight;
 import com.leclowndu93150.wakes.simulation.WakeNode;
 import com.leclowndu93150.wakes.debug.WakesDebugInfo;
 import net.minecraft.world.level.Level;
@@ -87,7 +88,7 @@ public class WakeRenderer {
 
         if (subLevel != null) {
             double bx = brick.pos.x;
-            double by = brick.pos.y + WakeNode.WATER_OFFSET;
+            double by = brick.pos.y + WakeNode.WATER_OFFSET + ShaderWaterHeight.offset();
             double bz = brick.pos.z;
             int dim = brick.dim;
             double cx = camera.getPosition().x;
@@ -108,7 +109,7 @@ public class WakeRenderer {
             buffer.addVertex(matrix, (float)(c10[0] - cx), (float)(c10[1] - cy), (float)(c10[2] - cz))
                     .setColor(1f, 1f, 1f, 1f).setUv(1, 0);
         } else {
-            Vector3f pos = brick.pos.add(camera.getPosition().reverse()).toVector3f().add(0, WakeNode.WATER_OFFSET, 0);
+            Vector3f pos = brick.pos.add(camera.getPosition().reverse()).toVector3f().add(0, WakeNode.WATER_OFFSET + ShaderWaterHeight.offset(), 0);
 
             buffer.addVertex(matrix, pos.x, pos.y, pos.z)
                     .setColor(1f, 1f, 1f, 1f).setUv(0, 0);

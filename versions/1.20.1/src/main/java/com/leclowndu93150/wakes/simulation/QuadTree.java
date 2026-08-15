@@ -65,6 +65,7 @@ public class QuadTree {
         if (hasLeaf() && brick != null) {
             if (bounds.x >= minX && bounds.x + bounds.width <= maxX &&
                     bounds.z >= minZ && bounds.z + bounds.width <= maxZ) {
+                brick.unlink();
                 brick.deallocTexture();
                 brick = null;
             }
@@ -86,6 +87,31 @@ public class QuadTree {
         int aliveChildren = 0;
         for (var tree : children) {
             if (tree.tick(wakeHandler)) aliveChildren++;
+        }
+        if (aliveChildren == 0) this.prune();
+        return aliveChildren > 0;
+    }
+
+    public boolean tickAdvance(WakeHandler wakeHandler) {
+        if (hasLeaf()) {
+            return brick.tickAdvance(wakeHandler);
+        }
+        if (children == null) return false;
+        int aliveChildren = 0;
+        for (var tree : children) {
+            if (tree.tickAdvance(wakeHandler)) aliveChildren++;
+        }
+        return aliveChildren > 0;
+    }
+
+    public boolean tickSolve(WakeHandler wakeHandler) {
+        if (hasLeaf()) {
+            return brick.tickSolve(wakeHandler);
+        }
+        if (children == null) return false;
+        int aliveChildren = 0;
+        for (var tree : children) {
+            if (tree.tickSolve(wakeHandler)) aliveChildren++;
         }
         if (aliveChildren == 0) this.prune();
         return aliveChildren > 0;
@@ -160,7 +186,10 @@ public class QuadTree {
         if (children != null) {
             for (var tree : children) {
                 tree.prune();
-                if (tree.hasLeaf()) tree.brick.deallocTexture();
+                if (tree.hasLeaf()) {
+                    tree.brick.unlink();
+                    tree.brick.deallocTexture();
+                }
             }
             children.set(0, null);
             children.set(1, null);

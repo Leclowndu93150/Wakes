@@ -42,7 +42,9 @@
   "wakes.configuration.firstPersonSplashPlane.tooltip": "Should the player's splash plane be seen while in first person?",
   "wakes.configuration.spawnParticles": "Wake particles",
   "wakes.configuration.shaderLightPassthrough": "Shader light passthrough",
-  "wakes.configuration.shaderLightPassthrough.tooltip": "Used to fine tune the appearance of wakes when using shaders. A higher value yields brighter wakes.",
+  "wakes.configuration.shaderLightPassthrough.tooltip": "Brightness of wakes while a shader pack is in use. Lighting comes from the shader pack itself, so 1.0 leaves wakes untouched and lower values dim them.",
+  "wakes.configuration.shaderWaterHeightOffset": "Extra shader water offset",
+  "wakes.configuration.shaderWaterHeightOffset.tooltip": "Extra height added on top of the wave height detected from the loaded shader pack. Only needed for packs whose water displacement cannot be detected automatically.",
 
   "wakes.configuration.splashPlane": "Splash Plane",
   "wakes.configuration.splashPlaneWidth": "Width",

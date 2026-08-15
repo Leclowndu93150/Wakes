@@ -2,7 +2,9 @@ package com.leclowndu93150.wakes.render;
 
 import com.leclowndu93150.wakes.WakesClient;
 import com.leclowndu93150.wakes.config.WakesConfig;
+import com.leclowndu93150.wakes.compat.iris.IrisAccess;
 import com.leclowndu93150.wakes.render.enums.RenderType;
+import com.leclowndu93150.wakes.render.water.ShaderWaterHeight;
 import com.leclowndu93150.wakes.simulation.Brick;
 import com.leclowndu93150.wakes.simulation.QuadTree;
 import com.leclowndu93150.wakes.simulation.WakeHandler;
@@ -38,6 +40,8 @@ import java.util.OptionalInt;
 public class WakeRenderer {
 
     public static void render(PoseStack poseStack, Frustum frustum, Vec3 cameraPos) {
+        WakesClient.areShadersEnabled = IrisAccess.shadersEnabled();
+
         if (WakesConfig.GENERAL.disableMod.get()) {
             WakesDebugInfo.quadsRendered = 0;
             return;
@@ -73,6 +77,7 @@ public class WakeRenderer {
 
         RenderPipeline pipeline = RenderType.getPipeline();
         Matrix4f matrix = poseStack.last().pose();
+        float heightOffset = ShaderWaterHeight.offset();
 
         Minecraft client = Minecraft.getInstance();
         ClientLevel level = client.level;
@@ -80,7 +85,7 @@ public class WakeRenderer {
 
         BufferBuilder bb = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, pipeline.getVertexFormat());
         for (Brick brick : ready) {
-            Vector3f pos = brick.pos.add(cameraPos.reverse()).toVector3f().add(0, WakeNode.WATER_OFFSET, 0);
+            Vector3f pos = brick.pos.add(cameraPos.reverse()).toVector3f().add(0, WakeNode.WATER_OFFSET + heightOffset, 0);
             float dim = brick.dim;
 
             int bx = (int) Math.floor(brick.pos.x);

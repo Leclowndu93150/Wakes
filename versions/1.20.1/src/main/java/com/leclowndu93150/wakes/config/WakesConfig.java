@@ -129,6 +129,7 @@ public class WakesConfig {
         public final ForgeConfigSpec.BooleanValue firstPersonSplashPlane;
         public final ForgeConfigSpec.BooleanValue spawnParticles;
         public final ForgeConfigSpec.DoubleValue shaderLightPassthrough;
+        public final ForgeConfigSpec.DoubleValue shaderWaterHeightOffset;
 
         public final ForgeConfigSpec.DoubleValue splashPlaneWidth;
         public final ForgeConfigSpec.DoubleValue splashPlaneHeight;
@@ -160,6 +161,10 @@ public class WakesConfig {
 
             shaderLightPassthrough = builder
                     .defineInRange("shaderLightPassthrough", 0.5d, 0.0d, 1.0d);
+
+            shaderWaterHeightOffset = builder
+                    .comment("Extra height added on top of the wave height detected from the loaded shader pack, for packs whose water displacement cannot be detected")
+                    .defineInRange("shaderWaterHeightOffset", 0.0d, 0.0d, 1.0d);
 
             builder.comment("Splash Plane Settings").push("splashPlane");
 

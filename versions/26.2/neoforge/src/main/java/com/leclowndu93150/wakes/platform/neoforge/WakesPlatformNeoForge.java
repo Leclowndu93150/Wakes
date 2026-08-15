@@ -18,6 +18,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.client.event.RegisterDebugEntriesEvent;
 import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
@@ -65,6 +66,11 @@ public class WakesPlatformNeoForge implements WakesPlatform {
         modEventBus.addListener((RegisterDebugEntriesEvent event) -> {
             for (DebugEntry e : pendingDebugEntries) event.register(e.id(), e.entry());
         });
+    }
+
+    @Override
+    public boolean isModLoaded(String modId) {
+        return ModList.get().isLoaded(modId);
     }
 
     @Override

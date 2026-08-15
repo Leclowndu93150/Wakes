@@ -105,6 +105,51 @@ public class Brick {
         return occupied != 0;
     }
 
+    public boolean tickAdvance(WakeHandler wakeHandler) {
+        if (occupied == 0) {
+            unusedTicks++;
+            if (unusedTicks > 100 && imgPtr != -1) {
+                deallocTexture();
+            }
+            return false;
+        }
+
+        unusedTicks = 0;
+
+        long tNode = System.nanoTime();
+        for (int z = 0; z < dim; z++) {
+            WakeNode[] row = nodes[z];
+            for (int x = 0; x < dim; x++) {
+                WakeNode node = row[x];
+                if (node == null) continue;
+
+                if (!node.tickAdvance()) {
+                    this.clear(x, z);
+                }
+            }
+        }
+        WakesDebugInfo.nodeLogicTime += (System.nanoTime() - tNode);
+        return occupied != 0;
+    }
+
+    public boolean tickSolve(WakeHandler wakeHandler) {
+        if (occupied == 0) return false;
+
+        long tNode = System.nanoTime();
+        for (int z = 0; z < dim; z++) {
+            WakeNode[] row = nodes[z];
+            for (int x = 0; x < dim; x++) {
+                WakeNode node = row[x];
+                if (node == null) continue;
+                node.tickSolve(wakeHandler);
+            }
+        }
+        WakesDebugInfo.nodeLogicTime += (System.nanoTime() - tNode);
+        WakesDebugInfo.nodeCount += occupied;
+        pixelsStale = true;
+        return occupied != 0;
+    }
+
     public void query(Frustum frustum, ArrayList<WakeNode> output) {
         for (int z = 0; z < dim; z++) {
             for (int x = 0; x < dim; x++) {
@@ -159,6 +204,8 @@ public class Brick {
     }
 
     public void clear(int x, int z) {
+        WakeNode node = nodes[z][x];
+        if (node != null) node.unlink();
         this.set(x, z, null);
         if (imgPtr != -1) {
             zeroCell(x, z);
@@ -181,6 +228,31 @@ public class Brick {
                 this.get(x + 1, z),
                 this.get(x, z - 1),
                 this.get(x - 1, z)).filter(Objects::nonNull).toList();
+    }
+
+    public void unlink() {
+        for (int z = 0; z < dim; z++) {
+            for (int x = 0; x < dim; x++) {
+                WakeNode node = nodes[z][x];
+                if (node != null) node.unlink();
+            }
+        }
+        if (NORTH != null) {
+            NORTH.SOUTH = null;
+            NORTH = null;
+        }
+        if (SOUTH != null) {
+            SOUTH.NORTH = null;
+            SOUTH = null;
+        }
+        if (EAST != null) {
+            EAST.WEST = null;
+            EAST = null;
+        }
+        if (WEST != null) {
+            WEST.EAST = null;
+            WEST = null;
+        }
     }
 
     public void updateAdjacency(Brick brick) {
@@ -234,7 +306,7 @@ public class Brick {
                     node.cachedFluidColor = BiomeColors.getAverageWaterColor(world, node.blockPos());
                     node.hasCachedFluidColor = true;
                 }
-                float opacity = (float) ((-Math.pow(node.t, 2) + 1) * wakeOpacity);
+                float opacity = wakeOpacity;
                 long cellPtr = imgPtr + texRes * 4L * (((long) z * stride) + x);
 
                 if (debug) {

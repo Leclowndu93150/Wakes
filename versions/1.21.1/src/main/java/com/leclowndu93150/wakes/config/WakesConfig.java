@@ -130,6 +130,7 @@ public class WakesConfig {
         public final ModConfigSpec.BooleanValue firstPersonSplashPlane;
         public final ModConfigSpec.BooleanValue spawnParticles;
         public final ModConfigSpec.DoubleValue shaderLightPassthrough;
+        public final ModConfigSpec.DoubleValue shaderWaterHeightOffset;
 
         public final ModConfigSpec.DoubleValue splashPlaneWidth;
         public final ModConfigSpec.DoubleValue splashPlaneHeight;
@@ -161,6 +162,10 @@ public class WakesConfig {
 
             shaderLightPassthrough = builder
                     .defineInRange("shaderLightPassthrough", 0.5d, 0.0d, 1.0d);
+
+            shaderWaterHeightOffset = builder
+                    .comment("Extra height added on top of the wave height detected from the loaded shader pack, for packs whose water displacement cannot be detected")
+                    .defineInRange("shaderWaterHeightOffset", 0.0d, 0.0d, 1.0d);
 
             builder.comment("Splash Plane Settings").push("splashPlane");
 

@@ -5,7 +5,6 @@ import com.leclowndu93150.wakes.particle.ModParticles;
 import com.leclowndu93150.wakes.particle.custom.SplashCloudParticle;
 import com.leclowndu93150.wakes.particle.custom.SplashPlaneParticle;
 import com.leclowndu93150.wakes.render.SplashPlaneRenderer;
-import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
@@ -17,7 +16,6 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fml.loading.FMLLoader;
 
 @OnlyIn(Dist.CLIENT)
 public class ClientRegistry {
@@ -30,13 +28,6 @@ public class ClientRegistry {
 
         modEventBus.register(ClientModEvents.class);
 
-        if (FMLLoader.getLoadingModList().getModFileById("iris") != null) {
-            try {
-                WakesClient.areShadersEnabled = IrisApi.getInstance().getConfig().areShadersEnabled();
-            } catch (Exception e) {
-                WakesClient.LOGGER.error("Failed to check Iris shader status", e);
-            }
-        }
     }
 
     @OnlyIn(Dist.CLIENT)

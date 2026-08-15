@@ -1,5 +1,6 @@
 package com.leclowndu93150.wakes;
 
+import com.leclowndu93150.wakes.compat.iris.IrisAccess;
 import com.leclowndu93150.wakes.network.NetworkHandler;
 import com.leclowndu93150.wakes.particle.ModParticles;
 import net.minecraftforge.api.distmarker.Dist;
@@ -30,7 +31,7 @@ public class WakesClient {
 	}
 
 	public static boolean areShadersEnabled() {
-		return areShadersEnabled;
+		return IrisAccess.shadersEnabled();
 	}
 
 	public static class ClientSetup {
