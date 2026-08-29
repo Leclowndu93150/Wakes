@@ -49,7 +49,7 @@ public class Brick {
         this.nodes = new WakeNode[dim][dim];
         this.pos = new Vec3(x, y, z);
 
-        initTexture(WakeHandler.resolution.res);
+        initTexture(WakeHandler.getResolutionSize());
     }
 
     public void initTexture(int res) {
@@ -286,7 +286,7 @@ public class Brick {
 
     public void populatePixels() {
         if (imgPtr == -1) {
-            initTexture(WakeHandler.resolution.res);
+            initTexture(WakeHandler.getResolutionSize());
         }
 
         long tTexturing = System.nanoTime();

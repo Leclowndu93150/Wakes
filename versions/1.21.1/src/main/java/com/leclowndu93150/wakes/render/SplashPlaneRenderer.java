@@ -88,7 +88,7 @@ public class SplashPlaneRenderer {
 
         if (splashPlane.imgPtr != -1) {
             if (splashPlane.wakeTexture == null) {
-                splashPlane.wakeTexture = new WakeTexture(WakeHandler.resolution.res, false);
+                splashPlane.wakeTexture = new WakeTexture(WakeHandler.getResolutionSize(), false);
             }
             if (splashPlane.pixelsDirty) {
                 splashPlane.wakeTexture.upload(splashPlane.imgPtr);

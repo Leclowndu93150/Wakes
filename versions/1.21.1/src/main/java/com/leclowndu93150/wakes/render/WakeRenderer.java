@@ -70,7 +70,7 @@ public class WakeRenderer {
             brick.populatePixels();
         }
         if (brick.wakeTexture == null) {
-            brick.wakeTexture = new WakeTexture(WakeHandler.resolution.res, true);
+            brick.wakeTexture = new WakeTexture(WakeHandler.getResolutionSize(), true);
         }
         if (brick.pixelsDirty) {
             brick.wakeTexture.upload(brick.imgPtr);

@@ -53,7 +53,7 @@ public class SplashPlaneParticle extends Particle {
 
     protected SplashPlaneParticle(ClientLevel world, double x, double y, double z) {
         super(world, x, y, z);
-        initTexture(WakeHandler.resolution.res);
+        initTexture(WakeHandler.getResolutionSize());
         WakeHandler.getInstance(world).ifPresent(wakeHandler -> wakeHandler.registerSplashPlane(this));
     }
 
@@ -146,7 +146,7 @@ public class SplashPlaneParticle extends Particle {
                 LightTexture.sky(lightCoordinate)
         );
         float opacity = WakesConfig.APPEARANCE.wakeOpacity.get().floatValue() * 0.9f;
-        int res = WakeHandler.resolution.res;
+        int res = WakeHandler.getResolutionSize();
         if (WakesConfig.DEBUG.debugColors.get()) {
             for (int r = 0; r < res; r++) {
                 for (int c = 0; c < res; c++) {

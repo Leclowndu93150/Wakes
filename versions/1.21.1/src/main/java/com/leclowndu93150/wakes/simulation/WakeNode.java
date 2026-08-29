@@ -221,7 +221,7 @@ public class WakeNode {
     }
     public static class Factory {
         public static Set<WakeNode> splashNodes(Entity entity, int y) {
-            int res = WakeHandler.resolution.res;
+            int res = WakeHandler.getResolutionSize();
             int w = (int) (0.8 * entity.getBbWidth() * res / 2);
             int x = (int) (entity.getX() * res);
             int z = (int) (entity.getZ() * res);
@@ -238,7 +238,7 @@ public class WakeNode {
         }
 
         public static Set<WakeNode> splashCircle(double x, int y, double z, float radius, float waveStrength, double velocity) {
-            int res = WakeHandler.resolution.res;
+            int res = WakeHandler.getResolutionSize();
             int w = (int) (radius * res);
             int px = (int) Math.floor(x * res);
             int pz = (int) Math.floor(z * res);
@@ -288,7 +288,7 @@ public class WakeNode {
         }
 
         private static void addNodeTrailPixels(Trail trail, LongArrayList pixelsAffected) {
-            int res = WakeHandler.resolution.res;
+            int res = WakeHandler.getResolutionSize();
             int x1 = (int) (trail.fromX * res);
             int z1 = (int) (trail.fromZ * res);
             int x2 = (int) (trail.toX * res);
@@ -316,7 +316,7 @@ public class WakeNode {
                 return;
             }
 
-            int res = WakeHandler.resolution.res;
+            int res = WakeHandler.getResolutionSize();
             int x1 = (int) Math.floor(trail.fromX * res);
             int z1 = (int) Math.floor(trail.fromZ * res);
             int x2 = (int) Math.floor(trail.toX * res);
@@ -339,7 +339,7 @@ public class WakeNode {
         }
 
         public static Set<WakeNode> nodeLine(double x, int y, double z, float waveStrength, Vec3 velocity, float width) {
-            int res = WakeHandler.resolution.res;
+            int res = WakeHandler.getResolutionSize();
             Vec3 dir = velocity.normalize();
             double nx = -dir.z;
             double nz = dir.x;
@@ -359,8 +359,8 @@ public class WakeNode {
             if ((int) (waveStrength * velocity) < 1) {
                 return new HashSet<>();
             }
-            int res = WakeHandler.resolution.res;
-            int power = WakeHandler.resolution.power;
+            int res = WakeHandler.getResolutionSize();
+            int power = WakeHandler.getResolutionPower();
             Long2ObjectOpenHashMap<LongOpenHashSet> pixelsInNodes = new Long2ObjectOpenHashMap<>();
             for (LongIterator iterator = pixelsAffected.iterator(); iterator.hasNext();) {
                 long pixel = iterator.nextLong();

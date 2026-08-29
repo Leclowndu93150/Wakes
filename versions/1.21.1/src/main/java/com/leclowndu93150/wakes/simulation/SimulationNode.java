@@ -13,7 +13,7 @@ public abstract class SimulationNode {
     public final int res;
 
     public SimulationNode() {
-        this.res = WakeHandler.resolution.res;
+        this.res = WakeHandler.getResolutionSize();
         this.u = new float[3][res+2][res+2];
         this.initialValues = new float[res+2][res+2];
     }
